@@ -138,7 +138,7 @@ namespace LoonePermissions.Managers
             cmd2.CommandText = string.Format("DELETE FROM `{0}` WHERE `groupid`='{1}'", PERMISSION_TABLE, groupId);
             cmd3.CommandText = string.Format("UPDATE `{0}` SET `parent`='{1}' WHERE `parent`='{2}'", GROUP_TABLE, LoonePermissionsConfig.DefaultGroup, groupId);
 
-            ReassignTo(groupId, LoonePermissionsConfig.DefaultGroup.ToLower());
+            ReassignTo(groupId, LoonePermissionsConfig.DefaultGroup.ToLower(), false);
 
             Connection.Open();
             cmd1.ExecuteNonQuery();
@@ -188,7 +188,7 @@ namespace LoonePermissions.Managers
             return true;
         }
 
-        public static void ReassignTo(string x, string y)
+        public static void ReassignTo(string x, string y, bool require)
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
 
@@ -204,7 +204,8 @@ namespace LoonePermissions.Managers
 
             foreach (ulong id in ids) {
                 RemovePlayerFromGroup(id, x);
-                AddPlayerToGroup(id, y);
+                if (require)
+                    AddPlayerToGroup(id, y);
             }
         }
 

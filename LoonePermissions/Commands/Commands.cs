@@ -133,7 +133,7 @@ namespace LoonePermissions.Commands
                 return;
             }
 
-            MySqlManager.ReassignTo(LoonePermissionsConfig.DefaultGroup.ToLower(), args[0].ToLower());
+            MySqlManager.ReassignTo(LoonePermissionsConfig.DefaultGroup.ToLower(), args[0].ToLower(), true);
             LoonePermissionsConfig.SetDefaultGroup(args[0].ToLower());
             LoonePermissions.Say(caller, "group_default", Color.green, args[0].ToLower());
             RocketLogger.Log(string.Format("{0} set the default group to {1}!", caller.DisplayName, args[0].ToLower()), ConsoleColor.Yellow);
