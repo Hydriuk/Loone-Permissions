@@ -5,4 +5,4 @@
 [assembly: AssemblyProduct("MySql Permission Provider")]
 [assembly: AssemblyCopyright("(c) 2017 52 Piece Games")]
 
-[assembly: AssemblyVersion("1.0.0.1")]
+[assembly: AssemblyVersion("1.0.0.2")]

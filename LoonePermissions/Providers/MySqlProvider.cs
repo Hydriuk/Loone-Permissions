@@ -30,15 +30,26 @@ namespace LoonePermissions.Providers
 
         public List<RocketPermissionsGroup> GetGroups(IRocketPlayer player, bool includeParentGroups)
         {
-            string groupId = MySqlManager.GetPlayerGroup(ulong.Parse(player.Id));
-            return new List<RocketPermissionsGroup> { MySqlManager.GetGroup(groupId) };
+            string[] groupId = MySqlManager.GetPlayerGroups(ulong.Parse(player.Id));
+            List<RocketPermissionsGroup> groups = new List<RocketPermissionsGroup>();
+
+            foreach (string str in groupId) 
+                groups.Add(MySqlManager.GetGroup(str));
+
+            return groups;
         }
 
 
         public List<Permission> GetPermissions(IRocketPlayer player)
         {
-            string groupId = MySqlManager.GetPlayerGroup(ulong.Parse(player.Id));
-            return MySqlManager.GetPermissionsByGroup(groupId, true);
+            string[] groupId = MySqlManager.GetPlayerGroups(ulong.Parse(player.Id));
+
+            List<Permission> perms = new List<Permission>();
+
+            foreach (string str in groupId)
+                perms.AddRange(MySqlManager.GetPermissionsByGroup(str, true));
+
+            return perms;
         }
 
 
@@ -61,7 +72,7 @@ namespace LoonePermissions.Providers
                 permsAsStrs.Add(perm.Name);
          
             foreach (string str in requestedPermissions) {
-                if (permsAsStrs.Contains(str))
+                if (permsAsStrs.Contains(str) && !permsAsStrs.Contains("~" + str))
                     return true;
             }
 

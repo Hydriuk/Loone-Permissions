@@ -132,15 +132,18 @@ namespace LoonePermissions.Managers
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
             MySqlCommand cmd2 = Connection.CreateCommand();
+            MySqlCommand cmd3 = Connection.CreateCommand();
 
             cmd1.CommandText = string.Format("DELETE FROM `{0}` WHERE `groupid`='{1}'", GROUP_TABLE, groupId);
             cmd2.CommandText = string.Format("DELETE FROM `{0}` WHERE `groupid`='{1}'", PERMISSION_TABLE, groupId);
+            cmd3.CommandText = string.Format("UPDATE `{0}` SET `parent`='{1}' WHERE `parent`='{2}'", GROUP_TABLE, LoonePermissionsConfig.DefaultGroup, groupId);
 
             ReassignTo(groupId, LoonePermissionsConfig.DefaultGroup.ToLower());
 
             Connection.Open();
             cmd1.ExecuteNonQuery();
             cmd2.ExecuteNonQuery();
+            cmd3.ExecuteNonQuery();
             Connection.Close();
         }
 
@@ -189,11 +192,20 @@ namespace LoonePermissions.Managers
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
 
-            cmd1.CommandText = string.Format("UPDATE `{0}` SET `groupid`='{1}' WHERE `groupid`='{2}'", PLAYER_TABLE, y, x);
+            cmd1.CommandText = string.Format("SELECT `csteamid` FROM `{0}`", PLAYER_TABLE, y, x);
+
+            List<ulong> ids = new List<ulong>();
 
             Connection.Open();
-            cmd1.ExecuteNonQuery();
+            MySqlDataReader dr = cmd1.ExecuteReader();
+            while (dr.Read())
+                ids.Add(dr.GetUInt64(0));
             Connection.Close();
+
+            foreach (ulong id in ids) {
+                RemovePlayerFromGroup(id, x);
+                AddPlayerToGroup(id, y);
+            }
         }
 
         static bool IsValidColor(string value)
@@ -269,7 +281,7 @@ namespace LoonePermissions.Managers
             return perms;
         }
 
-        public static string GetPlayerGroup(ulong steamid)
+        public static string[] GetPlayerGroups(ulong steamid)
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
             cmd1.CommandText = string.Format("SELECT `groupid` FROM `{0}` WHERE `csteamid`='{1}'", PLAYER_TABLE, steamid);
@@ -283,7 +295,7 @@ namespace LoonePermissions.Managers
                 AddPlayerFirstTime(steamid);
             }
 
-            return groupid;
+            return GetGroups(groupid);
         }
 
         public static bool GroupExists(string groupId)
@@ -311,17 +323,25 @@ namespace LoonePermissions.Managers
 
         public static RocketPermissionsProviderResult AddPlayerToGroup(ulong player, string groupId)
         {
-            string currentGroup = GetPlayerGroup(player);
+            string[] currentGroup = GetPlayerGroups(player);
 
-            if (currentGroup == groupId)
-                return RocketPermissionsProviderResult.Success;
+            for (int i = 0; i < currentGroup.Length; i++) {
+                if (groupId == currentGroup[i]) {
+                    return RocketPermissionsProviderResult.UnspecifiedError;
+                }
+            }
 
             if (!GroupExists(groupId))
                 return RocketPermissionsProviderResult.GroupNotFound;
 
+            string[] newGroup = new string[currentGroup.Length + 1];
+
+            currentGroup.CopyTo(newGroup, 0);
+            newGroup[currentGroup.Length] = groupId;
+
             MySqlCommand cmd1 = Connection.CreateCommand();
 
-            cmd1.CommandText = string.Format("UPDATE `{0}` SET `groupid`='{1}' WHERE `csteamid`='{2}'", PLAYER_TABLE, groupId, player);
+            cmd1.CommandText = string.Format("UPDATE `{0}` SET `groupid`='{1}' WHERE `csteamid`='{2}'", PLAYER_TABLE, CombineGroups(newGroup), player);
 
             Connection.Open();
             cmd1.ExecuteNonQuery();
@@ -332,17 +352,36 @@ namespace LoonePermissions.Managers
 
         public static RocketPermissionsProviderResult RemovePlayerFromGroup(ulong player, string groupId)
         {
-            string currentGroup = GetPlayerGroup(player);
+            string[] currentGroup = GetPlayerGroups(player);
+            int index;
 
-            if (currentGroup != groupId)
-                return RocketPermissionsProviderResult.UnspecifiedError;
+            for (int i = 0; i < currentGroup.Length; i++) {
+                if (groupId == currentGroup[i]) {
+                    index = i;
+                    goto SUCCESS;
+                }
+            }
 
-            if (!GroupExists(groupId))
-                return RocketPermissionsProviderResult.GroupNotFound;
+            return RocketPermissionsProviderResult.UnspecifiedError;
 
+        SUCCESS:
+
+            string[] newgroup = new string[currentGroup.Length];
+            int tempIndex = 0;
+
+            for (int i = 0; i < currentGroup.Length; i++) {
+                if (i != index) {
+                    newgroup[tempIndex] = currentGroup[i];
+                    tempIndex++;
+                }
+            }
+
+            if (newgroup.Length == 0)
+                newgroup = new string[] { LoonePermissionsConfig.DefaultGroup };
+            
             MySqlCommand cmd1 = Connection.CreateCommand();
 
-            cmd1.CommandText = string.Format("UPDATE `{0}` SET `groupid`='{1}' WHERE `csteamid`='{2}'", PLAYER_TABLE, LoonePermissionsConfig.DefaultGroup.ToLower(), player);
+            cmd1.CommandText = string.Format("UPDATE `{0}` SET `groupid`='{1}' WHERE `csteamid`='{2}'", PLAYER_TABLE, CombineGroups(newgroup), player);
 
             Connection.Open();
             cmd1.ExecuteNonQuery();
@@ -409,6 +448,27 @@ namespace LoonePermissions.Managers
             Connection.Close();
 
             return i != null;
+        }
+
+        public static string CombineGroups(string[] groups)
+        {
+            string g = string.Join(",", groups);
+            if (g.EndsWith(","))
+                g = g.Remove(g.Length - 1);
+
+            return g;
+
+        }
+
+            public static string[] GetGroups(string group)
+        {
+            string g = group;
+
+            if (g.EndsWith(","))
+                g = g.Remove(g.Length - 1);
+            
+
+            return g.Split(',');
         }
     }
 }
