@@ -59,19 +59,13 @@ namespace LoonePermissions.Providers
 
             foreach (Permission perm in perms)
                 permsAsStrs.Add(perm.Name);
-
-            bool found = false;
-
+         
             foreach (string str in requestedPermissions) {
-                if (!permsAsStrs.Contains(str)) {
-                    Logger.Log(String.Format("Failed Comparison {0}!", str), ConsoleColor.Yellow);
-                } else {
-                    Logger.Log(String.Format("Successful Comparison {0}!", str), ConsoleColor.Yellow);
-                    found = true;
-                }
+                if (permsAsStrs.Contains(str))
+                    return true;
             }
 
-            return found;
+            return false;
         }
 
         public void Reload()

@@ -72,7 +72,7 @@ namespace LoonePermissions.Managers
                 AddPermission("default", "rocket", 0);
                 AddPermission("default", "compass", 60);
             }
-            
+
             if (obj3 == null) {
                 Connection.Open();
 
@@ -108,12 +108,13 @@ namespace LoonePermissions.Managers
                     Color = (dr.IsDBNull(5)) ? "" : dr.GetString(5),
                 };
                 Connection.Close();
-                group.Permissions = GetPermissionsByGroup(groupId, true);
+                //Is this even needed?
+                //group.Permissions = GetPermissionsByGroup(groupId, true);
             } else {
                 Connection.Close();
                 return GetGroup(LoonePermissionsConfig.DefaultGroup.ToLower());
             }
-         
+
             return group;
         }
 
@@ -142,7 +143,7 @@ namespace LoonePermissions.Managers
             cmd2.ExecuteNonQuery();
             Connection.Close();
         }
-        
+
         public static bool UpdateGroup(EGroupProperty prop, string value, string groupId)
         {
             bool wasSuccess = false;
@@ -231,7 +232,7 @@ namespace LoonePermissions.Managers
 
             if (value == "yellow")
                 return true;
-            
+
             return value.StartsWith("#", StringComparison.Ordinal);
         }
 
@@ -244,7 +245,7 @@ namespace LoonePermissions.Managers
 
             cmd1.CommandText = string.Format("SELECT `permission`, `cooldown` FROM `{0}` WHERE `groupid`='{1}'", PERMISSION_TABLE, groupId);
             cmd2.CommandText = string.Format("SELECT `parent` FROM `{0}` WHERE `groupid`='{1}'", GROUP_TABLE, groupId);
-            
+
             if (includeParents) {
                 Connection.Open();
                 object obj = cmd2.ExecuteScalar();
@@ -259,12 +260,12 @@ namespace LoonePermissions.Managers
 
             Connection.Open();
             MySqlDataReader dr = cmd1.ExecuteReader();
-            
+
             while (dr.Read()) {
                 perms.Add(new Permission(dr.GetString(0), dr.GetUInt32(1)));
             }
             Connection.Close();
-            
+
             return perms;
         }
 
@@ -362,7 +363,7 @@ namespace LoonePermissions.Managers
 
             return (obj == null) ? -1 : (int)obj;
         }
-        
+
         public static void AddPermission(string group, string perm, int cooldown)
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
@@ -373,7 +374,7 @@ namespace LoonePermissions.Managers
             cmd1.ExecuteNonQuery();
             Connection.Close();
         }
-        
+
 
         public static void RemovePermission(string group, string perm)
         {
