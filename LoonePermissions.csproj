@@ -46,7 +46,9 @@
     <Reference Include="UnityEngine">
       <HintPath>lib\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="System.Data" />
+    <Reference Include="System.Data">
+	  <HintPath>lib\System.Data.dll</HintPath>
+	</Reference>
     <Reference Include="I18N">
       <HintPath>lib\I18N.dll</HintPath>
     </Reference>
