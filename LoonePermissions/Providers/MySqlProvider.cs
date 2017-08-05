@@ -36,7 +36,9 @@ namespace LoonePermissions.Providers
             foreach (string str in groupId)
                 groups.Add(MySqlManager.GetGroup(str));
 
-            return groups;
+            return (from x in groups.Distinct()
+                    orderby x.Priority
+                    select x).ToList();
         }
 
 
