@@ -21,7 +21,7 @@ namespace LoonePermissions.Commands
                 LoonePermissions.Say(caller, "invalid_args", Color.red);
                 return;
             }
-            
+
             string groupId = args[0].ToLower();
             string modify = args[1].ToLower();
             string value = args[2];
@@ -54,6 +54,12 @@ namespace LoonePermissions.Commands
                     else
                         LoonePermissions.Say(caller, "group_modified", Color.green, modify, groupId, value);
                     break;
+                case "priority":
+                    if (!MySqlManager.UpdateGroup(EGroupProperty.PRIORITY, value, groupId))
+                        LoonePermissions.Say(caller, "invalid_num", Color.red);
+                    else
+                        LoonePermissions.Say(caller, "group_modified", Color.green, modify, groupId, value);
+                    break;
                 default:
                     LoonePermissions.Say(caller, "invalid_args", Color.red);
                     break;
@@ -62,7 +68,7 @@ namespace LoonePermissions.Commands
             RocketLogger.Log(string.Format("{0} has set the {1} of {2} to {3}!", caller.DisplayName, modify, groupId, value), ConsoleColor.Yellow);
         }
     }
-    
+
     public class CommandDelete : ILooneCommand
     {
         public string Help => "Deletes a group and migrates every player to the default!";
@@ -101,7 +107,7 @@ namespace LoonePermissions.Commands
                 return;
             }
 
-            if (MySqlManager.GroupExists(args[0].ToLower())){
+            if (MySqlManager.GroupExists(args[0].ToLower())) {
                 LoonePermissions.Say(caller, "group_exists", Color.red);
                 return;
             }
@@ -111,7 +117,7 @@ namespace LoonePermissions.Commands
             RocketLogger.Log(string.Format("{0} created the group {1}!", caller.DisplayName, args[0].ToLower()), ConsoleColor.Yellow);
         }
     }
-    
+
     public class CommandDefault : ILooneCommand
     {
         public string Help => "Sets a default group and migrates every player!";
@@ -123,7 +129,7 @@ namespace LoonePermissions.Commands
                 return;
             }
 
-            if (!MySqlManager.GroupExists(args[0].ToLower())){
+            if (!MySqlManager.GroupExists(args[0].ToLower())) {
                 LoonePermissions.Say(caller, "group_not_exists", Color.red);
                 return;
             }
@@ -139,7 +145,7 @@ namespace LoonePermissions.Commands
             RocketLogger.Log(string.Format("{0} set the default group to {1}!", caller.DisplayName, args[0].ToLower()), ConsoleColor.Yellow);
         }
     }
-    
+
     public class CommandAdd : ILooneCommand
     {
         public string Help => "Sets a default group and migrates every player!";
@@ -191,7 +197,7 @@ namespace LoonePermissions.Commands
             }
         }
     }
-    
+
     public class CommandRemove : ILooneCommand
     {
         public string Help => "Sets a default group and migrates every player!";

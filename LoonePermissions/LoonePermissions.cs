@@ -54,6 +54,7 @@ namespace LoonePermissions
                     { "invalid_perms", "You don't have permission to do this!" },
                     { "invalid_cmd", "That commands doesn't exist!" },
                     { "invalid_color", "You specified an invalid color!" },
+                    { "invalid_num", "Please specify an actual number!" },
                     { "group_create", "You have created the group: {0}!" },
                     { "group_delete", "You have deleted the group: {0}, all players in this group were moved to {1}!" },
                     { "group_delete_default", "You can't delete the default group!" },

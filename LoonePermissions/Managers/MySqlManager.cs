@@ -17,7 +17,7 @@ namespace LoonePermissions.Managers
         const string PERMISSION_TABLE = "loone_permissions";
         const string PLAYER_TABLE = "loone_players";
 
-        const string GROUP_TABLE_CREATE = "CREATE TABLE `" + GROUP_TABLE + "` (`groupid` VARCHAR(50) NOT NULL UNIQUE, `groupname` VARCHAR(50) NOT NULL, `parent` VARCHAR(50), `prefix` VARCHAR(50), `suffix` VARCHAR(50), `color` VARCHAR(7) DEFAULT 'white', PRIMARY KEY (`groupid`))";
+        const string GROUP_TABLE_CREATE = "CREATE TABLE `" + GROUP_TABLE + "` (`groupid` VARCHAR(50) NOT NULL UNIQUE, `groupname` VARCHAR(50) NOT NULL, `parent` VARCHAR(50), `prefix` VARCHAR(50), `suffix` VARCHAR(50), `color` VARCHAR(7) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
         const string PERMISSION_TABLE_CREATE = "CREATE TABLE `" + PERMISSION_TABLE + "` (`groupid` VARCHAR(50) NOT NULL, `permission` VARCHAR(50) NOT NULL, `cooldown` INTEGER DEFAULT '0')";
         const string PLAYER_TABLE_CREATE = "CREATE TABLE `" + PLAYER_TABLE + "` (`csteamid` BIGINT NOT NULL UNIQUE, `groupid` VARCHAR(50) NOT NULL, PRIMARY KEY (`csteamid`))";
 
@@ -106,6 +106,7 @@ namespace LoonePermissions.Managers
                     Prefix = (dr.IsDBNull(3)) ? "" : dr.GetString(3),
                     Suffix = (dr.IsDBNull(4)) ? "" : dr.GetString(4),
                     Color = (dr.IsDBNull(5)) ? "" : dr.GetString(5),
+                    Priority = (dr.IsDBNull(6)) ? (short)100 : dr.GetInt16(6)
                 };
                 Connection.Close();
                 //Is this even needed?
@@ -121,7 +122,7 @@ namespace LoonePermissions.Managers
         public static void CreateGroup(string groupId)
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
-            cmd1.CommandText = string.Format("INSERT INTO `{0}` VALUES ('{1}','{1}','{2}','{2}','{2}','{3}')", GROUP_TABLE, groupId, null, "white");
+            cmd1.CommandText = string.Format("INSERT INTO `{0}` VALUES ('{1}','{1}','{2}','{2}','{2}','{3}','{4}')", GROUP_TABLE, groupId, null, "white", 100);
 
             Connection.Open();
             cmd1.ExecuteNonQuery();
@@ -175,6 +176,14 @@ namespace LoonePermissions.Managers
                 case EGroupProperty.SUFFIX:
                     cmd1.CommandText = string.Format("UPDATE `{0}` SET `suffix`='{1}' WHERE `groupid`='{2}'", GROUP_TABLE, value, groupId);
                     wasSuccess = true;
+                    break;
+                case EGroupProperty.PRIORITY:
+                    if (short.TryParse(value, out short i)) {
+                        cmd1.CommandText = string.Format("UPDATE `{0}` SET `priority`='{1}' WHERE `groupid`='{2}'", GROUP_TABLE, value, groupId);
+                        wasSuccess = true;
+                    } else
+                        wasSuccess = false;
+
                     break;
             }
 
@@ -379,7 +388,7 @@ namespace LoonePermissions.Managers
 
             if (newgroup.Length == 0)
                 newgroup = new string[] { LoonePermissionsConfig.DefaultGroup };
-            
+
             MySqlCommand cmd1 = Connection.CreateCommand();
 
             cmd1.CommandText = string.Format("UPDATE `{0}` SET `groupid`='{1}' WHERE `csteamid`='{2}'", PLAYER_TABLE, CombineGroups(newgroup), player);
@@ -461,13 +470,13 @@ namespace LoonePermissions.Managers
 
         }
 
-            public static string[] GetGroups(string group)
+        public static string[] GetGroups(string group)
         {
             string g = group;
 
             if (g.EndsWith(","))
                 g = g.Remove(g.Length - 1);
-            
+
 
             return g.Split(',');
         }

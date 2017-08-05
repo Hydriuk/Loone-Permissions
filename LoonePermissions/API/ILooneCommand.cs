@@ -18,6 +18,7 @@ namespace LoonePermissions.API
         PARENT,
         PREFIX,
         SUFFIX,
-        COLOR
+        COLOR,
+        PRIORITY
     }
 }

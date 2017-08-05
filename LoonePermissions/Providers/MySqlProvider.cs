@@ -33,7 +33,7 @@ namespace LoonePermissions.Providers
             string[] groupId = MySqlManager.GetPlayerGroups(ulong.Parse(player.Id));
             List<RocketPermissionsGroup> groups = new List<RocketPermissionsGroup>();
 
-            foreach (string str in groupId) 
+            foreach (string str in groupId)
                 groups.Add(MySqlManager.GetGroup(str));
 
             return groups;
@@ -65,12 +65,12 @@ namespace LoonePermissions.Providers
             if (player.IsAdmin)
                 return true;
 
-            List<Permission> perms = GetPermissions(player, requestedPermissions);
+            List<Permission> perms = GetPermissions(player);
             List<string> permsAsStrs = new List<string>();
 
             foreach (Permission perm in perms)
                 permsAsStrs.Add(perm.Name);
-         
+
             foreach (string str in requestedPermissions) {
                 if (permsAsStrs.Contains(str) && !permsAsStrs.Contains("~" + str))
                     return true;
