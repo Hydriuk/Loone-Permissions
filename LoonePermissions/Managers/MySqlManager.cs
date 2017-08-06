@@ -124,7 +124,7 @@ namespace LoonePermissions.Managers
             try{
                 Connection.Open();
             } catch {
-                Logger.Log("LoonePermissions caught a connection error!", ConsoleColor.Yellow);
+                Logger.Log("LoonePermissions caught a connection error! Just ignore this message :D", ConsoleColor.Yellow);
                 Connection.Close();
                 Connection.Open();
             }
@@ -135,7 +135,7 @@ namespace LoonePermissions.Managers
             try {
                 Connection.Close();
             } catch {
-                Logger.Log("LoonePermissions caught a connection error!", ConsoleColor.Yellow);
+                Logger.Log("LoonePermissions caught a connection error! Just ignore this message :D", ConsoleColor.Yellow);
             }
         }
 
