@@ -19,7 +19,7 @@ namespace LoonePermissions.Managers
 
         const string GROUP_TABLE_CREATE = "CREATE TABLE `" + GROUP_TABLE + "` (`groupid` VARCHAR(50) NOT NULL UNIQUE, `groupname` VARCHAR(50) NOT NULL, `parent` VARCHAR(50), `prefix` VARCHAR(50), `suffix` VARCHAR(50), `color` VARCHAR(7) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
         const string PERMISSION_TABLE_CREATE = "CREATE TABLE `" + PERMISSION_TABLE + "` (`groupid` VARCHAR(50) NOT NULL, `permission` VARCHAR(50) NOT NULL, `cooldown` INTEGER DEFAULT '0')";
-        const string PLAYER_TABLE_CREATE = "CREATE TABLE `" + PLAYER_TABLE + "` (`csteamid` BIGINT NOT NULL UNIQUE, `groupid` VARCHAR(50) NOT NULL, PRIMARY KEY (`csteamid`))";
+        const string PLAYER_TABLE_CREATE = "CREATE TABLE `" + PLAYER_TABLE + "` (`csteamid` BIGINT NOT NULL UNIQUE, `groupid` VARCHAR(255) NOT NULL, PRIMARY KEY (`csteamid`))";
 
         static MySqlConnection Connection => connection;
         static MySqlConnection connection;
@@ -31,10 +31,12 @@ namespace LoonePermissions.Managers
             MySqlCommand cmd1 = connection.CreateCommand();
             MySqlCommand cmd2 = connection.CreateCommand();
             MySqlCommand cmd3 = connection.CreateCommand();
+			MySqlCommand cmd4 = connection.CreateCommand();
 
             cmd1.CommandText = string.Format("SHOW TABLES LIKE '{0}'", GROUP_TABLE);
             cmd2.CommandText = string.Format("SHOW TABLES LIKE '{0}'", PERMISSION_TABLE);
             cmd3.CommandText = string.Format("SHOW TABLES LIKE '{0}'", PLAYER_TABLE);
+			cmd4.CommandText = string.Format("ALTER TABLE `{0}` MODIFY `{1}` VARCHAR(255)", PLAYER_TABLE, "groupid");
 
             Connection.Open();
 
