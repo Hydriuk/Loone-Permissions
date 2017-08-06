@@ -44,12 +44,12 @@ namespace LoonePermissions.Providers
 
         public List<Permission> GetPermissions(IRocketPlayer player)
         {
-            string[] groupId = MySqlManager.GetPlayerGroups(ulong.Parse(player.Id));
+            List<RocketPermissionsGroup> groupId = GetGroups(player, true);
 
             List<Permission> perms = new List<Permission>();
 
-            foreach (string str in groupId)
-                perms.AddRange(MySqlManager.GetPermissionsByGroup(str, true));
+            foreach (RocketPermissionsGroup str in groupId)
+                perms.AddRange(MySqlManager.GetPermissionsByGroup(str.Id, true));
 
             return perms;
         }
