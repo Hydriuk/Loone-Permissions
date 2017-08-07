@@ -26,8 +26,9 @@ namespace LoonePermissions.Managers
             RegisterCommand("remove", new CommandRemove());
             RegisterCommand("default", new CommandRemove());
             RegisterCommand("group", new CommandGroup());
+            RegisterCommand("migrate", new CommandMigrate());
         }
-        
+
         public static void Excecute(IRocketPlayer caller, string cmd, string[] args)
         {
 
@@ -40,7 +41,7 @@ namespace LoonePermissions.Managers
                 LoonePermissions.Say(caller, "invalid_perms", Color.red);
                 return;
             }
-            
+
             command.Excecute(caller, args);
         }
 
@@ -70,7 +71,7 @@ namespace LoonePermissions
 {
     public class LooneCommand : IRocketCommand
     {
-        public AllowedCaller AllowedCaller => AllowedCaller.Player;
+        public AllowedCaller AllowedCaller => AllowedCaller.Both;
 
         public string Name => "loone";
 
@@ -81,10 +82,10 @@ namespace LoonePermissions
         public List<string> Aliases => new List<string>();
 
         public List<string> Permissions => new List<string>();
-        
+
         public void Execute(IRocketPlayer caller, string[] command)
         {
-            if (command.Length == 0) {
+            if (command.Length == 0 && !(caller is ConsolePlayer)) {
                 ((UnturnedPlayer)caller).Player.sendBrowserRequest("Here's a link to the Loone Permissions wiki!", "https://github.com/");
                 return;
             }

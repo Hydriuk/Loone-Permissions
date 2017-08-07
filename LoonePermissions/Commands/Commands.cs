@@ -227,4 +227,21 @@ namespace LoonePermissions.Commands
             RocketLogger.Log(string.Format("{0} removed the permission {1} from {2}!", caller.DisplayName, perm, groupId), ConsoleColor.Yellow);
         }
     }
+
+    public class CommandMigrate : ILooneCommand
+    {
+        public string Help => "Migrates all data from the XML file to MySQL!";
+
+        public void Excecute(IRocketPlayer caller, string[] args)
+        {
+            LoonePermissions.Say(caller, "migrate_start", Color.green);
+            try {
+                MySqlManager.MigrateDatabase();
+            } catch (Exception e) {
+                LoonePermissions.Say(caller, "migrate_fail", Color.red);
+                RocketLogger.LogException(e);
+            }
+            LoonePermissions.Say(caller, "migrate_finish", Color.green);
+        }
+    }
 }

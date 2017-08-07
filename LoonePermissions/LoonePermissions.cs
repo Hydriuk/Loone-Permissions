@@ -24,7 +24,8 @@ namespace LoonePermissions
     public class LoonePermissions : RocketPlugin
     {
         public static LoonePermissions instance;
-        static IRocketPermissionsProvider orignal;
+        public static IRocketPermissionsProvider orignal;
+        public static MySqlProvider provider;
 
         protected override void Load()
         {
@@ -37,7 +38,8 @@ namespace LoonePermissions
             CommandManager.Initialize();
 
             orignal = R.Permissions;
-            R.Permissions = new MySqlProvider();
+            provider = new MySqlProvider();
+            R.Permissions = provider;
         }
 
         protected override void Unload()
@@ -67,14 +69,20 @@ namespace LoonePermissions
                     { "perm_removed", "The permission {0} has been removed from {1}!" },
                     { "perm_exists", "The group {0} already has the permission {1} with a cooldown of {2}! " },
                     { "perm_not_exists", "The group {0} doesn't have the permission {1}!" },
-                    { "perm_modified", "The cooldown for {0} in the group {1} has been set to {2}!"}
+                    { "perm_modified", "The cooldown for {0} in the group {1} has been set to {2}!"},
+                    { "migrate_start", "The migration from XML to MySQL has started!"},
+                    { "migrate_finish", "The migration has finished!"},
+                    { "migrate_fail", "Migration failed!"}
                 };
             }
         }
 
         public static void Say(IRocketPlayer caller, string message, Color color, params object[] objs)
         {
-            UnturnedChat.Say(caller, instance.Translate(message, objs), color);
+            if (caller is ConsolePlayer)
+                RocketLogger.Log(instance.Translate(message, objs), ConsoleColor.Yellow);
+            else
+                UnturnedChat.Say(caller, instance.Translate(message, objs), color);
         }
     }
 

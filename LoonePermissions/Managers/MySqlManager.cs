@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Rocket.API;
 using Rocket.Core.Logging;
 using LoonePermissions.API;
+using Rocket.Core.Assets;
 
 namespace LoonePermissions.Managers
 {
@@ -175,9 +176,9 @@ namespace LoonePermissions.Managers
 
             switch (prop) {
                 case EGroupProperty.COLOR:
-                    if (IsValidColor(value)) {
+                    if (IsValidColor(value, out string newVal)) {
                         wasSuccess = true;
-                        cmd1.CommandText = string.Format("UPDATE `{0}` SET `color`='{1}' WHERE `groupid`='{2}'", GROUP_TABLE, value, groupId);
+                        cmd1.CommandText = string.Format("UPDATE `{0}` SET `color`='{1}' WHERE `groupid`='{2}'", GROUP_TABLE, newVal, groupId);
                     } else
                         wasSuccess = false;
                     break;
@@ -238,9 +239,11 @@ namespace LoonePermissions.Managers
             }
         }
 
-        static bool IsValidColor(string value)
+        static bool IsValidColor(string value, out string mod)
         {
             string color = value.ToLower();
+
+            mod = value;
 
             if (value == "black")
                 return true;
@@ -275,7 +278,15 @@ namespace LoonePermissions.Managers
             if (value == "yellow")
                 return true;
 
-            return value.StartsWith("#", StringComparison.Ordinal);
+            string newVal = "";
+            if (!value.StartsWith("#"))
+                newVal = "#" + value;
+            else
+                newVal = value;
+
+            mod = newVal;
+
+            return newVal.Length == 7;
         }
 
         public static List<Permission> GetPermissionsByGroup(string groupId, bool includeParents)
@@ -311,7 +322,7 @@ namespace LoonePermissions.Managers
             return perms;
         }
 
-        public static string[] GetPlayerGroups(ulong steamid)
+        public static string[] GetPlayerGroups(ulong steamid, bool forceDefault)
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
             cmd1.CommandText = string.Format("SELECT `groupid` FROM `{0}` WHERE `csteamid`='{1}'", PLAYER_TABLE, steamid);
@@ -326,10 +337,12 @@ namespace LoonePermissions.Managers
             }
 
             TryClose();
+            if (forceDefault) {
 
-            if (groups.Count == 0) {
-                groups.Add(LoonePermissionsConfig.DefaultGroup.ToLower());
-                AddPlayerFirstTime(steamid);
+                if (groups.Count == 0) {
+                    groups.Add(LoonePermissionsConfig.DefaultGroup.ToLower());
+                    AddPlayerFirstTime(steamid);
+                }
             }
 
             return groups.ToArray();
@@ -363,7 +376,7 @@ namespace LoonePermissions.Managers
             if (!GroupExists(groupId))
                 return RocketPermissionsProviderResult.GroupNotFound;
 
-            string[] currentGroup = GetPlayerGroups(player);
+            string[] currentGroup = GetPlayerGroups(player, false);
 
             for (int i = 0; i < currentGroup.Length; i++) {
                 if (groupId == currentGroup[i]) {
@@ -384,7 +397,7 @@ namespace LoonePermissions.Managers
 
         public static RocketPermissionsProviderResult RemovePlayerFromGroup(ulong player, string groupId)
         {
-            string[] currentGroup = GetPlayerGroups(player);
+            string[] currentGroup = GetPlayerGroups(player, true);
             int index;
 
             if (currentGroup.Length != 1) {
@@ -416,7 +429,7 @@ namespace LoonePermissions.Managers
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
 
-            cmd1.CommandText = string.Format("SELECT `cooldown` FROM `{0}` WHERE `permission`='{1}'", PERMISSION_TABLE, perm.ToLower());
+            cmd1.CommandText = string.Format("SELECT `cooldown` FROM `{0}` WHERE `permission`='{1}' AND `groupid`='{2}'", PERMISSION_TABLE, perm.ToLower(), groupId);
 
             TryOpen();
             object obj = cmd1.ExecuteScalar();
@@ -470,6 +483,35 @@ namespace LoonePermissions.Managers
             TryClose();
 
             return i != null;
+        }
+
+        public static void MigrateDatabase()
+        {
+            RocketPermissions p = new XMLFileAsset<RocketPermissions>(Rocket.Core.Environment.PermissionFile, null, null).Instance;
+            LoonePermissionsConfig.SetDefaultGroup(p.DefaultGroup);
+
+            foreach (RocketPermissionsGroup group in p.Groups) {
+                CreateGroup(group.Id);
+                if (group.Color != null) UpdateGroup(EGroupProperty.COLOR, group.Color, group.Id);
+                if (group.ParentGroup != null) UpdateGroup(EGroupProperty.PARENT, group.ParentGroup, group.Id);
+                if (group.Prefix != null) UpdateGroup(EGroupProperty.PREFIX, group.Prefix, group.Id);
+                if (group.Suffix != null) UpdateGroup(EGroupProperty.SUFFIX, group.Suffix, group.Id);
+                if (group.DisplayName != null) UpdateGroup(EGroupProperty.NAME, group.DisplayName, group.Id);
+                UpdateGroup(EGroupProperty.PRIORITY, group.Priority.ToString(), group.Id);
+
+                foreach (Permission perm in group.Permissions) {
+                    string name = perm.Name;
+                    name = name.Replace("-", "~");
+
+                    AddPermission(group.Id, name, (int)perm.Cooldown);
+                }
+
+                foreach (string player in group.Members) {
+                    if (ulong.TryParse(player, out ulong id)) {
+                        AddPlayerToGroup(id, group.Id);
+                    }
+                }
+            }
         }
     }
 }

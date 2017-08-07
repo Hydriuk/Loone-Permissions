@@ -30,7 +30,7 @@ namespace LoonePermissions.Providers
 
         public List<RocketPermissionsGroup> GetGroups(IRocketPlayer player, bool includeParentGroups)
         {
-            string[] groupId = MySqlManager.GetPlayerGroups(ulong.Parse(player.Id));
+            string[] groupId = MySqlManager.GetPlayerGroups(ulong.Parse(player.Id), true);
             List<RocketPermissionsGroup> groups = new List<RocketPermissionsGroup>();
 
             foreach (string str in groupId)
