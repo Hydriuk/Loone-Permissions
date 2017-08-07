@@ -17,9 +17,9 @@ namespace LoonePermissions.Managers
         const string PERMISSION_TABLE = "loone_permissions";
         const string PLAYER_TABLE = "loone_players";
 
-        const string GROUP_TABLE_CREATE = "CREATE TABLE `" + GROUP_TABLE + "` (`groupid` VARCHAR(50) NOT NULL UNIQUE, `groupname` VARCHAR(50) NOT NULL, `parent` VARCHAR(50), `prefix` VARCHAR(50), `suffix` VARCHAR(50), `color` VARCHAR(7) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
-        const string PERMISSION_TABLE_CREATE = "CREATE TABLE `" + PERMISSION_TABLE + "` (`groupid` VARCHAR(50) NOT NULL, `permission` VARCHAR(50) NOT NULL, `cooldown` INTEGER DEFAULT '0')";
-        const string PLAYER_TABLE_CREATE = "CREATE TABLE `" + PLAYER_TABLE + "` (`csteamid` BIGINT NOT NULL, `groupid` VARCHAR(255) NOT NULL)";
+        const string GROUP_TABLE_CREATE = "CREATE TABLE `" + GROUP_TABLE + "` (`groupid` VARCHAR(64) NOT NULL UNIQUE, `groupname` VARCHAR(64) NOT NULL, `parent` VARCHAR(64), `prefix` VARCHAR(64), `suffix` VARCHAR(64), `color` VARCHAR(7) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
+        const string PERMISSION_TABLE_CREATE = "CREATE TABLE `" + PERMISSION_TABLE + "` (`groupid` VARCHAR(64) NOT NULL, `permission` VARCHAR(64) NOT NULL, `cooldown` INTEGER DEFAULT '0')";
+        const string PLAYER_TABLE_CREATE = "CREATE TABLE `" + PLAYER_TABLE + "` (`csteamid` BIGINT NOT NULL, `groupid` VARCHAR(64) NOT NULL)";
 
         static MySqlConnection Connection => connection;
         static MySqlConnection connection;
@@ -121,7 +121,7 @@ namespace LoonePermissions.Managers
 
         public static void TryOpen()
         {
-            try{
+            try {
                 Connection.Open();
             } catch {
                 Logger.Log("LoonePermissions caught a connection error! Just ignore this message :D", ConsoleColor.Yellow);
@@ -310,7 +310,7 @@ namespace LoonePermissions.Managers
 
             return perms;
         }
-        
+
         public static string[] GetPlayerGroups(ulong steamid)
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
@@ -357,7 +357,7 @@ namespace LoonePermissions.Managers
             cmd1.ExecuteNonQuery();
             TryClose();
         }
-        
+
         public static RocketPermissionsProviderResult AddPlayerToGroup(ulong player, string groupId)
         {
             if (!GroupExists(groupId))
@@ -381,7 +381,7 @@ namespace LoonePermissions.Managers
 
             return RocketPermissionsProviderResult.Success;
         }
-        
+
         public static RocketPermissionsProviderResult RemovePlayerFromGroup(ulong player, string groupId)
         {
             string[] currentGroup = GetPlayerGroups(player);
