@@ -487,6 +487,21 @@ namespace LoonePermissions.Managers
 
         public static void MigrateDatabase()
         {
+
+            MySqlCommand cmd1 = Connection.CreateCommand();
+            MySqlCommand cmd2 = Connection.CreateCommand();
+            MySqlCommand cmd3 = Connection.CreateCommand();
+
+            cmd1.CommandText = String.Format("DELETE FROM {0}", PLAYER_TABLE);
+            cmd2.CommandText = String.Format("DELETE FROM {0}", PERMISSION_TABLE);
+            cmd3.CommandText = String.Format("DELETE FROM {0}", GROUP_TABLE);
+
+            TryOpen();
+            cmd1.ExecuteNonQuery();
+            cmd2.ExecuteNonQuery();
+            cmd3.ExecuteNonQuery();
+            TryClose();
+
             RocketPermissions p = new XMLFileAsset<RocketPermissions>(Rocket.Core.Environment.PermissionFile, null, null).Instance;
             LoonePermissionsConfig.SetDefaultGroup(p.DefaultGroup);
 
