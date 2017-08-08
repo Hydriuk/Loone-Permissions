@@ -85,10 +85,11 @@ namespace LoonePermissions
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
-            if (command.Length == 0 && !(caller is ConsolePlayer)) {
-                ((UnturnedPlayer)caller).Player.sendBrowserRequest("Here's a link to the Loone Permissions wiki!", "https://github.com/");
-                return;
-            }
+            if (command.Length == 0) 
+                if (!(caller is ConsolePlayer)) 
+                    ((UnturnedPlayer)caller).Player.sendBrowserRequest("Here's a link to the Loone Permissions wiki!", "https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
+                else
+                    LoonePermissions.Say(caller, "https://github.com/ChubbyQuokka/Loone-Permissions/wiki", Color.black);
 
             string[] args = new string[command.Length - 1];
 

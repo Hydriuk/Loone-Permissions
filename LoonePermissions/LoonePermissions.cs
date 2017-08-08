@@ -63,7 +63,7 @@ namespace LoonePermissions
                     { "group_default", "You have changed the default group to {0}!" },
                     { "group_default_already", "This is already the default group!" },
                     { "group_exists", "That group already exists!" },
-                    { "group_not_exists", "That group doesn't exists!" },
+                    { "group_not_exists", "That group doesn't exist!" },
                     { "group_modified", "You have set the {0} of {1} to {2}!" },
                     { "perm_added", "The permission {0} has been added to {1} with a cooldown of {2}!" },
                     { "perm_removed", "The permission {0} has been removed from {1}!" },
