@@ -43,6 +43,8 @@
     <Reference Include="Rocket.Unturned">
       <HintPath>lib\Rocket.Unturned.dll</HintPath>
     </Reference>
+    <Reference Include="System.Management" />
+    <Reference Include="System.Transactions" />
     <Reference Include="UnityEngine">
       <HintPath>lib\UnityEngine.dll</HintPath>
     </Reference>
