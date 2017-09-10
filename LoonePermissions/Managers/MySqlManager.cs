@@ -94,27 +94,47 @@ namespace LoonePermissions.Managers
             cmd1.CommandText = string.Format("SELECT * FROM `{0}` WHERE `groupid`='{1}'", GROUP_TABLE, groupId);
 
             TryOpen();
-            MySqlDataReader dr = cmd1.ExecuteReader();
+            MySqlDataReader dr1 = cmd1.ExecuteReader();
 
             RocketPermissionsGroup group;
 
-            if (dr.Read()) {
+            if (dr1.Read()) {
+                
                 group = new RocketPermissionsGroup()
                 {
                     Id = groupId,
-                    DisplayName = (dr.IsDBNull(1)) ? "" : dr.GetString(1),
-                    ParentGroup = (dr.IsDBNull(2)) ? "" : dr.GetString(2),
-                    Prefix = (dr.IsDBNull(3)) ? "" : dr.GetString(3),
-                    Suffix = (dr.IsDBNull(4)) ? "" : dr.GetString(4),
-                    Color = (dr.IsDBNull(5)) ? "" : dr.GetString(5),
-                    Priority = (dr.IsDBNull(6)) ? (short)100 : dr.GetInt16(6)
+                    DisplayName = (dr1.IsDBNull(1)) ? "" : dr1.GetString(1),
+                    ParentGroup = (dr1.IsDBNull(2)) ? "" : dr1.GetString(2),
+                    Prefix = (dr1.IsDBNull(3)) ? "" : dr1.GetString(3),
+                    Suffix = (dr1.IsDBNull(4)) ? "" : dr1.GetString(4),
+                    Color = (dr1.IsDBNull(5)) ? "" : dr1.GetString(5),
+                    Priority = (dr1.IsDBNull(6)) ? (short)100 : dr1.GetInt16(6)
                 };
                 TryClose();
-                //Is this even needed?
-                //group.Permissions = GetPermissionsByGroup(groupId, true);
+                
+                TryOpen();
+                group.Members = new List<string>();
+                MySqlCommand cmd2 = Connection.CreateCommand();
+                cmd2.CommandText = string.Format("SELECT `csteamid` FROM `{0}` WHERE `groupid`='{1}'", PLAYER_TABLE, groupId);
+                MySqlDataReader dr2 = cmd2.ExecuteReader();
+                while (dr2.Read()) {
+                    group.Members.Add(dr2.GetString(0));
+                }
+                TryClose();
+                
+                TryOpen();
+                group.Permissions=new List<Permission>();
+                MySqlCommand cmd3 = Connection.CreateCommand();
+                cmd3.CommandText = string.Format("SELECT * FROM `{0}` WHERE `groupid`='{1}'", PERMISSION_TABLE, groupId);
+                MySqlDataReader dr3 = cmd3.ExecuteReader();
+                while (dr3.Read()) {
+                    group.Permissions.Add(new Permission(dr3.GetString(1), dr3.GetUInt32(2)));
+                }
+                TryClose();
+                
             } else {
                 TryClose();
-                return GetGroup(LoonePermissionsConfig.DefaultGroup.ToLower());
+                return null; // no such group eh
             }
 
             return group;
