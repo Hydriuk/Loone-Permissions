@@ -411,9 +411,18 @@ namespace LoonePermissions.Managers
 
             string[] currentGroup = GetPlayerGroups(player, false);
 
+            if(currentGroup[0] == LoonePermissionsConfig.DefaultGroup && currentGroup.Length == 1) {
+                MySqlCommand cmd2 = Connection.CreateCommand();
+                cmd2.CommandText = string.Format("INSERT INTO `{0}` VALUES ('{1}','{2}')", PLAYER_TABLE, player, LoonePermissionsConfig.DefaultGroup);
+
+                TryOpen();
+                cmd2.ExecuteNonQuery();
+                TryClose();
+            }
+
             for (int i = 0; i < currentGroup.Length; i++)
             {
-                if (groupId == currentGroup[i])
+                if (groupId == currentGroup[i] || groupId == LoonePermissionsConfig.DefaultGroup)
                 {
                     return RocketPermissionsProviderResult.UnspecifiedError;
                 }
