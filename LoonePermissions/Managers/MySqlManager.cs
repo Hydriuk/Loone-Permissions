@@ -410,13 +410,13 @@ namespace LoonePermissions.Managers
 
             string[] currentGroup = GetPlayerGroups(player, true);
 
-            if(currentGroup.Length == 1 && currentGroup[0] == LoonePermissionsConfig.DefaultGroup) {
+            if(groupId == LoonePermissionsConfig.DefaultGroup && currentGroup[0] == LoonePermissionsConfig.DefaultGroup) {
                 return RocketPermissionsProviderResult.Success;
             }
 
             for (int i = 0; i < currentGroup.Length; i++)
             {
-                if (groupId == currentGroup[i] || groupId == LoonePermissionsConfig.DefaultGroup)
+                if (groupId == currentGroup[i])
                 {
                     return RocketPermissionsProviderResult.UnspecifiedError;
                 }
