@@ -381,13 +381,12 @@ namespace LoonePermissions.Managers
             }
 
             TryClose();
-            if (forceDefault)
-            {
+
                 if (groups.Count == 0)
                 {
                     groups.Add(LoonePermissionsConfig.DefaultGroup.ToLower());
                 }
-            }
+            
 
             return groups.ToArray();
         }
@@ -412,12 +411,7 @@ namespace LoonePermissions.Managers
             string[] currentGroup = GetPlayerGroups(player, true);
 
             if(currentGroup.Length == 1 && currentGroup[0] == LoonePermissionsConfig.DefaultGroup) {
-                MySqlCommand cmd2 = Connection.CreateCommand();
-                cmd2.CommandText = string.Format("INSERT INTO `{0}` VALUES ('{1}','{2}')", PLAYER_TABLE, player, LoonePermissionsConfig.DefaultGroup);
-
-                TryOpen();
-                cmd2.ExecuteNonQuery();
-                TryClose();
+                return RocketPermissionsProviderResult.Success;
             }
 
             for (int i = 0; i < currentGroup.Length; i++)
@@ -454,7 +448,12 @@ namespace LoonePermissions.Managers
             } else {
                 AddPlayerToGroup(player, LoonePermissionsConfig.DefaultGroup);
             }
-           
+
+            if (currentGroup.Length == 2) {
+                if (currentGroup[0] == LoonePermissionsConfig.DefaultGroup || currentGroup[1] == LoonePermissionsConfig.DefaultGroup) {
+                    RemovePlayerFromGroup(player, LoonePermissionsConfig.DefaultGroup);
+                }
+            }            
 
         SUCCESS:
 
