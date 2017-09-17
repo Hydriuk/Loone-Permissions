@@ -409,9 +409,9 @@ namespace LoonePermissions.Managers
             if (!GroupExists(groupId))
                 return RocketPermissionsProviderResult.GroupNotFound;
 
-            string[] currentGroup = GetPlayerGroups(player, false);
+            string[] currentGroup = GetPlayerGroups(player, true);
 
-            if(currentGroup[0] == LoonePermissionsConfig.DefaultGroup && currentGroup.Length == 1) {
+            if(currentGroup.Length == 1 && currentGroup[0] == LoonePermissionsConfig.DefaultGroup) {
                 MySqlCommand cmd2 = Connection.CreateCommand();
                 cmd2.CommandText = string.Format("INSERT INTO `{0}` VALUES ('{1}','{2}')", PLAYER_TABLE, player, LoonePermissionsConfig.DefaultGroup);
 
