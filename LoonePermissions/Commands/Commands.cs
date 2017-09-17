@@ -1,13 +1,12 @@
-﻿using LoonePermissions.API;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
+
 using Rocket.API;
+using RocketLogger = Rocket.Core.Logging.Logger;
 
 using UnityEngine;
-using RocketLogger = Rocket.Core.Logging.Logger;
+
 using LoonePermissions.Managers;
+using LoonePermissions.API;
 
 namespace LoonePermissions.Commands
 {
@@ -17,7 +16,8 @@ namespace LoonePermissions.Commands
 
         public void Excecute(IRocketPlayer caller, string[] args)
         {
-            if (args.Length != 3) {
+            if (args.Length != 3)
+            {
                 LoonePermissions.Say(caller, "invalid_args", Color.red);
                 return;
             }
@@ -26,12 +26,14 @@ namespace LoonePermissions.Commands
             string modify = args[1].ToLower();
             string value = args[2];
 
-            if (!MySqlManager.GroupExists(groupId)) {
+            if (!MySqlManager.GroupExists(groupId))
+            {
                 LoonePermissions.Say(caller, "group_not_exists", Color.red);
                 return;
             }
 
-            switch (modify) {
+            switch (modify)
+            {
                 case "name":
                     MySqlManager.UpdateGroup(EGroupProperty.NAME, value, groupId);
                     LoonePermissions.Say(caller, "group_modified", Color.green, modify, groupId, value);
@@ -75,17 +77,20 @@ namespace LoonePermissions.Commands
 
         public void Excecute(IRocketPlayer caller, string[] args)
         {
-            if (args.Length != 1) {
+            if (args.Length != 1)
+            {
                 LoonePermissions.Say(caller, "invalid_args", Color.red);
                 return;
             }
 
-            if (!MySqlManager.GroupExists(args[0].ToLower())) {
+            if (!MySqlManager.GroupExists(args[0].ToLower()))
+            {
                 LoonePermissions.Say(caller, "group_not_exists", Color.red);
                 return;
             }
 
-            if (LoonePermissionsConfig.DefaultGroup.ToLower() == args[0]) {
+            if (LoonePermissionsConfig.DefaultGroup.ToLower() == args[0])
+            {
                 LoonePermissions.Say(caller, "group_delete_default", Color.red);
                 return;
             }
@@ -102,12 +107,14 @@ namespace LoonePermissions.Commands
 
         public void Excecute(IRocketPlayer caller, string[] args)
         {
-            if (args.Length != 1) {
+            if (args.Length != 1)
+            {
                 LoonePermissions.Say(caller, "invalid_args", Color.red);
                 return;
             }
 
-            if (MySqlManager.GroupExists(args[0].ToLower())) {
+            if (MySqlManager.GroupExists(args[0].ToLower()))
+            {
                 LoonePermissions.Say(caller, "group_exists", Color.red);
                 return;
             }
@@ -124,17 +131,20 @@ namespace LoonePermissions.Commands
 
         public void Excecute(IRocketPlayer caller, string[] args)
         {
-            if (args.Length != 1) {
+            if (args.Length != 1)
+            {
                 LoonePermissions.Say(caller, "invalid_args", Color.red);
                 return;
             }
 
-            if (!MySqlManager.GroupExists(args[0].ToLower())) {
+            if (!MySqlManager.GroupExists(args[0].ToLower()))
+            {
                 LoonePermissions.Say(caller, "group_not_exists", Color.red);
                 return;
             }
 
-            if (LoonePermissionsConfig.DefaultGroup.ToLower() == args[0].ToLower()) {
+            if (LoonePermissionsConfig.DefaultGroup.ToLower() == args[0].ToLower())
+            {
                 LoonePermissions.Say(caller, "group_default_already", Color.red);
                 return;
             }
@@ -152,12 +162,14 @@ namespace LoonePermissions.Commands
 
         public void Excecute(IRocketPlayer caller, string[] args)
         {
-            if (args.Length != 2 && args.Length != 3) {
+            if (args.Length != 2 && args.Length != 3)
+            {
                 LoonePermissions.Say(caller, "invalid_args", Color.red);
                 return;
             }
 
-            if (!MySqlManager.GroupExists(args[0].ToLower())) {
+            if (!MySqlManager.GroupExists(args[0].ToLower()))
+            {
                 LoonePermissions.Say(caller, "group_not_exists", Color.red);
                 return;
             }
@@ -172,25 +184,35 @@ namespace LoonePermissions.Commands
 
             int cooldown;
 
-            if (args.Length == 3) {
-                if (!int.TryParse(args[2], out cooldown)) {
+            if (args.Length == 3)
+            {
+                if (!int.TryParse(args[2], out cooldown))
+                {
                     LoonePermissions.Say(caller, "invalid_args", Color.red);
                     return;
                 }
-            } else {
+            }
+            else
+            {
                 cooldown = 0;
             }
 
-            if (doModify) {
-                if (oldCooldown == cooldown) {
+            if (doModify)
+            {
+                if (oldCooldown == cooldown)
+                {
                     LoonePermissions.Say(caller, "perm_exists", Color.red);
                     return;
-                } else {
+                }
+                else
+                {
                     MySqlManager.ModifyPermsission(groupId, perm, cooldown);
                     LoonePermissions.Say(caller, "perm_modified", Color.green, perm, groupId, cooldown);
                     RocketLogger.Log(string.Format("{0} has set the cooldown of {1} to {2} in {3}!", caller.DisplayName, perm, cooldown, groupId), ConsoleColor.Yellow);
                 }
-            } else {
+            }
+            else
+            {
                 MySqlManager.AddPermission(groupId, perm, cooldown);
                 LoonePermissions.Say(caller, "perm_added", Color.green, perm, groupId, cooldown);
                 RocketLogger.Log(string.Format("{0} added the permission {1} with a cooldown of {2} to {3}!", caller.DisplayName, perm, cooldown, groupId), ConsoleColor.Yellow);
@@ -204,7 +226,8 @@ namespace LoonePermissions.Commands
 
         public void Excecute(IRocketPlayer caller, string[] args)
         {
-            if (args.Length != 2) {
+            if (args.Length != 2)
+            {
                 LoonePermissions.Say(caller, "invalid_args", Color.red);
                 return;
             }
@@ -212,13 +235,15 @@ namespace LoonePermissions.Commands
             string groupId = args[0].ToLower();
             string perm = args[1].ToLower();
 
-            if (!MySqlManager.GroupExists(groupId)) {
+            if (!MySqlManager.GroupExists(groupId))
+            {
                 LoonePermissions.Say(caller, "group_not_exists", Color.red);
                 return;
             }
 
-            if (MySqlManager.GetPermission(perm, groupId) == -1) {
-                LoonePermissions.Say(caller, "perm_not_exists", Color.red);
+            if (MySqlManager.GetPermission(perm, groupId) == -1)
+            {
+                LoonePermissions.Say(caller, "perm_not_exists", Color.red, groupId, perm);
                 return;
             }
 
@@ -235,9 +260,12 @@ namespace LoonePermissions.Commands
         public void Excecute(IRocketPlayer caller, string[] args)
         {
             LoonePermissions.Say(caller, "migrate_start", Color.green);
-            try {
+            try
+            {
                 MySqlManager.MigrateDatabase();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 LoonePermissions.Say(caller, "migrate_fail", Color.red);
                 RocketLogger.LogException(e);
             }

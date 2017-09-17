@@ -1,13 +1,13 @@
-﻿using LoonePermissions.API;
+﻿using System.Collections.Generic;
+
+using LoonePermissions.API;
 using LoonePermissions.Commands;
 using LoonePermissions.Managers;
+
 using Rocket.API;
 using Rocket.Core;
 using Rocket.Unturned.Player;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
 using UnityEngine;
 
 namespace LoonePermissions.Managers
@@ -32,12 +32,14 @@ namespace LoonePermissions.Managers
         public static void Excecute(IRocketPlayer caller, string cmd, string[] args)
         {
 
-            if (!TryGetCommand(cmd, out ILooneCommand command)) {
+            if (!TryGetCommand(cmd, out ILooneCommand command))
+            {
                 LoonePermissions.Say(caller, "invalid_cmd", Color.red);
                 return;
             }
 
-            if (!HasPermission(caller, cmd)) {
+            if (!HasPermission(caller, cmd))
+            {
                 LoonePermissions.Say(caller, "invalid_perms", Color.red);
                 return;
             }
@@ -85,8 +87,8 @@ namespace LoonePermissions
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
-            if (command.Length == 0) 
-                if (!(caller is ConsolePlayer)) 
+            if (command.Length == 0)
+                if (!(caller is ConsolePlayer))
                     ((UnturnedPlayer)caller).Player.sendBrowserRequest("Here's a link to the Loone Permissions wiki!", "https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
                 else
                     LoonePermissions.Say(caller, "https://github.com/ChubbyQuokka/Loone-Permissions/wiki", Color.black);

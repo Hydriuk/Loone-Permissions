@@ -1,23 +1,19 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 
 using Rocket.API;
-using Rocket.API.Serialisation;
+using Rocket.API.Collections;
+using Rocket.Core;
 using Rocket.Core.Plugins;
-
-using Newtonsoft.Json;
+using Rocket.Unturned.Chat;
 using RocketLogger = Rocket.Core.Logging.Logger;
 
+using Newtonsoft.Json;
+
 using LoonePermissions.Providers;
-using Rocket.Core;
 using LoonePermissions.Managers;
-using Rocket.Unturned.Player;
-using Rocket.Unturned;
 
 using UnityEngine;
-using Rocket.Unturned.Chat;
-using Rocket.API.Collections;
 
 namespace LoonePermissions
 {
@@ -106,17 +102,23 @@ namespace LoonePermissions
 
         public static void Initialize()
         {
-            if (File.Exists(Directory)) {
+            if (File.Exists(Directory))
+            {
                 string config = File.ReadAllText(Directory);
-                try {
+                try
+                {
                     instance = JsonConvert.DeserializeObject<LoonePermissionsConfig>(config);
-                } catch {
+                }
+                catch
+                {
                     File.WriteAllText(Directory_Errored, config);
                     LoadDefaultConfig();
                     SaveConfig();
                     RocketLogger.LogError("Config failed to load! Reverting to default settings...");
                 }
-            } else {
+            }
+            else
+            {
                 LoadDefaultConfig();
                 SaveConfig();
             }

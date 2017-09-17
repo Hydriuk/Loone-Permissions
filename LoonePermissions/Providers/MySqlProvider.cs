@@ -6,7 +6,6 @@ using LoonePermissions.Managers;
 
 using Rocket.API;
 using Rocket.API.Serialisation;
-using Rocket.Core.Logging;
 
 namespace LoonePermissions.Providers
 {
@@ -73,7 +72,13 @@ namespace LoonePermissions.Providers
             foreach (Permission perm in perms)
                 permsAsStrs.Add(perm.Name);
 
-            foreach (string str in requestedPermissions) {
+            if (permsAsStrs.Contains("*"))
+            {
+                return true;
+            }
+
+            foreach (string str in requestedPermissions)
+            {
                 if (permsAsStrs.Contains(str) && !permsAsStrs.Contains("~" + str))
                     return true;
             }
