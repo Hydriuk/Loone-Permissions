@@ -383,11 +383,9 @@ namespace LoonePermissions.Managers
             TryClose();
             if (forceDefault)
             {
-
                 if (groups.Count == 0)
                 {
                     groups.Add(LoonePermissionsConfig.DefaultGroup.ToLower());
-                    AddPlayerFirstTime(steamid);
                 }
             }
 
@@ -404,17 +402,6 @@ namespace LoonePermissions.Managers
             TryClose();
 
             return group != null;
-        }
-
-        public static void AddPlayerFirstTime(ulong player)
-        {
-            MySqlCommand cmd1 = Connection.CreateCommand();
-
-            cmd1.CommandText = string.Format("INSERT INTO `{0}` VALUES ('{1}','{2}')", PLAYER_TABLE, player, LoonePermissionsConfig.DefaultGroup.ToLower());
-
-            TryOpen();
-            cmd1.ExecuteNonQuery();
-            TryClose();
         }
 
         public static RocketPermissionsProviderResult AddPlayerToGroup(ulong player, string groupId)
