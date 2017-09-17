@@ -448,20 +448,17 @@ namespace LoonePermissions.Managers
             string[] currentGroup = GetPlayerGroups(player, true);
             int index;
 
-            if (currentGroup.Length != 1)
-            {
-
-                for (int i = 0; i < currentGroup.Length; i++)
-                {
-                    if (groupId == currentGroup[i])
-                    {
+            if (currentGroup.Length != 1) {
+                for (int i = 0; i < currentGroup.Length; i++) {
+                    if (groupId == currentGroup[i]) {
                         index = i;
                         goto SUCCESS;
                     }
                 }
+            } else {
+                AddPlayerToGroup(player, LoonePermissionsConfig.DefaultGroup);
             }
-
-            return RocketPermissionsProviderResult.UnspecifiedError;
+           
 
         SUCCESS:
 
