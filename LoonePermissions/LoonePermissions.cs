@@ -24,6 +24,7 @@ namespace LoonePermissions
     {
         public static LoonePermissions Instance { get; private set; }
         public static MySqlProvider Provider { get; private set; }
+        public static Assembly GameAssembly { get; private set; }
         public static Assembly RocketAssembly { get; private set; }
         public static IGameHook GameHook { get; private set; }
 
@@ -36,12 +37,25 @@ namespace LoonePermissions
             Instance = this;
 
             hooks.Add(new UnturnedProvider());
+            hooks.Add(new TLFProvider());
 
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            for (int i = 0; i < hooks.Count; i++) {
-                for (int ii = 0; ii < assemblies.Length; ii++) {
-                    if (hooks[i].DeterminingAssembly == assemblies[ii].GetName().Name) {
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                if (assemblies[i].GetName().Name == "Assembly-CSharp")
+                {
+                    GameAssembly = assemblies[i];
+                    break;
+                }
+            }
+
+            for (int i = 0; i < hooks.Count; i++)
+            {
+                for (int ii = 0; ii < assemblies.Length; ii++)
+                {
+                    if (hooks[i].DeterminingAssembly == assemblies[ii].GetName().Name)
+                    {
                         GameHook = hooks[i];
                         RocketAssembly = assemblies[ii];
                         goto FoundRocketAssembly;
@@ -53,9 +67,9 @@ namespace LoonePermissions
             UnloadPlugin();
             return;
 
-            FoundRocketAssembly:
+        FoundRocketAssembly:
 
-            RocketLogger.Log(string.Format("Welcome to Loone Permissions v{0}!", Assembly.GetName().Version.ToString()), ConsoleColor.Yellow);
+            RocketLogger.Log(string.Format("Welcome to Loone Permissions v{0}!", Assembly.GetName().Version), ConsoleColor.Yellow);
             RocketLogger.Log(string.Format("Plugin is now running in compatibility mode with: {0}", GameHook.DeterminingAssembly), ConsoleColor.Yellow);
 
             GameHook.Initialize();
@@ -164,9 +178,11 @@ namespace LoonePermissions
 
         static void LoadDefaultConfig()
         {
-            instance = new LoonePermissionsConfig();
-            instance.defaultGroup = "default";
-            instance.databaseSettings = new MySqlSettings { Database = "unturned", Username = "root", Password = "toor", Address = "127.0.0.1", Port = 3306 };
+            instance = new LoonePermissionsConfig
+            {
+                defaultGroup = "default",
+                databaseSettings = new MySqlSettings { Database = "unturned", Username = "root", Password = "toor", Address = "127.0.0.1", Port = 3306 }
+            };
         }
 
         public static void SetDefaultGroup(string groupId)

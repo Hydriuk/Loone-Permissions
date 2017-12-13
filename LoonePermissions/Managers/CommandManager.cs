@@ -7,8 +7,7 @@ using LoonePermissions.Managers;
 
 using Rocket.API;
 using Rocket.Core;
-using Rocket.Unturned.Player;
-//using Rocket.Unturned.Player;
+using RocketLogger = Rocket.Core.Logging.Logger;
 
 using UnityEngine;
 
@@ -91,9 +90,9 @@ namespace LoonePermissions
         {
             if (command.Length == 0)
                 if (!(caller is ConsolePlayer))
-                    ((UnturnedPlayer)caller).Player.sendBrowserRequest("Here's a link to the Loone Permissions wiki!", "https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
+                    LoonePermissions.GameHook.OpenSteamBrowser(caller, "https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
                 else
-                    LoonePermissions.Say(caller, "https://github.com/ChubbyQuokka/Loone-Permissions/wiki", Color.black);
+                    RocketLogger.Log("https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
 
             string[] args = new string[command.Length - 1];
 
