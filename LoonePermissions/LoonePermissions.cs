@@ -1,17 +1,20 @@
 ﻿using System;
+using System.Linq;
 using System.IO;
+using System.Reflection;
+using System.Collections.Generic;
 
 using Rocket.API;
 using Rocket.API.Collections;
 using Rocket.Core;
 using Rocket.Core.Plugins;
-using Rocket.Unturned.Chat;
 using RocketLogger = Rocket.Core.Logging.Logger;
 
 using Newtonsoft.Json;
 
 using LoonePermissions.Providers;
 using LoonePermissions.Managers;
+using LoonePermissions.Hooks;
 
 using UnityEngine;
 
@@ -19,28 +22,57 @@ namespace LoonePermissions
 {
     public class LoonePermissions : RocketPlugin
     {
-        public static LoonePermissions instance;
-        public static IRocketPermissionsProvider orignal;
-        public static MySqlProvider provider;
+        public static LoonePermissions Instance { get; private set; }
+        public static MySqlProvider Provider { get; private set; }
+        public static Assembly RocketAssembly { get; private set; }
+        public static IGameHook GameHook { get; private set; }
+
+        static List<IGameHook> hooks = new List<IGameHook>();
+
+        static IRocketPermissionsProvider orignal;
 
         protected override void Load()
         {
-            instance = this;
+            Instance = this;
+
+            hooks.Add(new UnturnedProvider());
+
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            for (int i = 0; i < hooks.Count; i++) {
+                for (int ii = 0; ii < assemblies.Length; ii++) {
+                    if (hooks[i].DeterminingAssembly == assemblies[ii].GetName().Name) {
+                        GameHook = hooks[i];
+                        RocketAssembly = assemblies[ii];
+                        goto FoundRocketAssembly;
+                    }
+                }
+            }
+
+            RocketLogger.Log("Failed to find any supporting games! Please only use this software with supported games.");
+            UnloadPlugin();
+            return;
+
+            FoundRocketAssembly:
 
             RocketLogger.Log(string.Format("Welcome to Loone Permissions v{0}!", Assembly.GetName().Version.ToString()), ConsoleColor.Yellow);
+            RocketLogger.Log(string.Format("Plugin is now running in compatibility mode with: {0}", GameHook.DeterminingAssembly), ConsoleColor.Yellow);
+
+            GameHook.Initialize();
 
             LoonePermissionsConfig.Initialize();
             MySqlManager.Initialize();
             CommandManager.Initialize();
 
             orignal = R.Permissions;
-            provider = new MySqlProvider();
-            R.Permissions = provider;
+            Provider = new MySqlProvider();
+            R.Permissions = Provider;
         }
 
         protected override void Unload()
         {
-            R.Permissions = orignal;
+            if (orignal != null)
+                R.Permissions = orignal;
         }
 
         public override TranslationList DefaultTranslations
@@ -76,9 +108,9 @@ namespace LoonePermissions
         public static void Say(IRocketPlayer caller, string message, Color color, params object[] objs)
         {
             if (caller is ConsolePlayer)
-                RocketLogger.Log(instance.Translate(message, objs), ConsoleColor.Yellow);
+                RocketLogger.Log(Instance.Translate(message, objs), ConsoleColor.Yellow);
             else
-                UnturnedChat.Say(caller, instance.Translate(message, objs), color);
+                GameHook.Say(caller, Instance.Translate(message, objs), color);
         }
     }
 

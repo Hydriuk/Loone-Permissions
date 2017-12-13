@@ -44,11 +44,11 @@
       <HintPath>lib\Rocket.Unturned.dll</HintPath>
     </Reference>
     <Reference Include="System.Management">
-	  <HintPath>lib\System.Management.dll</HintPath>
-	</Reference>
-	<Reference Include="System.Transactions">
-	  <HintPath>lib\System.Transactions.dll</HintPath>
-	</Reference>
+      <HintPath>lib\System.Management.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Transactions">
+      <HintPath>lib\System.Transactions.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>lib\UnityEngine.dll</HintPath>
     </Reference>
@@ -69,6 +69,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LoonePermissions\API\Hooks.cs" />
     <Compile Include="LoonePermissions\API\ILooneCommand.cs" />
     <Compile Include="LoonePermissions\Commands\Commands.cs" />
     <Compile Include="LoonePermissions\Managers\CommandManager.cs" />
@@ -77,7 +78,9 @@
     <Compile Include="LoonePermissions\LoonePermissions.cs" />
     <Compile Include="LoonePermissions\Managers\MySqlManager.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="API\" />
+  </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
