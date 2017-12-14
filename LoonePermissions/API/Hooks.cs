@@ -2,6 +2,7 @@
 using System.Reflection;
 
 using Rocket.API;
+using RocketLogger = Rocket.Core.Logging.Logger;
 
 using UnityEngine;
 
@@ -22,24 +23,30 @@ namespace LoonePermissions.Hooks
     {
         public string DeterminingAssembly => "Rocket.Unturned";
 
-        MethodInfo SayToPlayer { get; set; }
-        MethodInfo SayToServer { get; set; }
-        MethodInfo OpenURLInSteamOverlay { get; set; }
+        MethodInfo SayToPlayer;
+        MethodInfo SayToServer;
+        MethodInfo OpenURLInSteamOverlay;
 
-        Type PlayerType { get; set; }
+        PropertyInfo SDGPlayerProperty;
+
+        Type UPlayerType;
 
         public void Initialize()
         {
             SayToPlayer = LoonePermissions.RocketAssembly.GetType("Rocket.Unturned.Chat.UnturnedChat").GetMethod("Say", new Type[] { typeof(IRocketPlayer), typeof(string), typeof(Color) });
             SayToServer = LoonePermissions.RocketAssembly.GetType("Rocket.Unturned.Chat.UnturnedChat").GetMethod("Say", new Type[] { typeof(string), typeof(Color) });
-            PlayerType = LoonePermissions.RocketAssembly.GetType("Rocket.Unturned.Player.UnturnedPlayer");
-            OpenURLInSteamOverlay = PlayerType.GetMethod("Player.sendBrowserRequest", new Type[] { typeof(string), typeof(string) });
+            UPlayerType = LoonePermissions.RocketAssembly.GetType("Rocket.Unturned.Player.UnturnedPlayer");
+            SDGPlayerProperty = UPlayerType.GetProperty("Player");
+            
+            OpenURLInSteamOverlay = LoonePermissions.GameAssembly.GetType("SDG.Unturned.Player").GetMethod("sendBrowserRequest", new Type[] { typeof(string), typeof(string) });
         }
 
         public void OpenSteamBrowser(IRocketPlayer p, string url)
         {
-            object obj = Convert.ChangeType(p, PlayerType);
-            OpenURLInSteamOverlay.Invoke(obj, new object[] { "LoonePermissions requests that you open this link!", url });
+            object uPlayer = Convert.ChangeType(p, UPlayerType);
+            object sdgPlayer = SDGPlayerProperty.GetValue(uPlayer, new object[0]);
+
+            OpenURLInSteamOverlay.Invoke(sdgPlayer, new object[] { "LoonePermissions requests that you open this link!", url });
         }
 
         public void Say(IRocketPlayer p, string text, Color c)

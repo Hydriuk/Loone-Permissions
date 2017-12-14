@@ -88,11 +88,14 @@ namespace LoonePermissions
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
-            if (command.Length == 0)
+            if (command.Length == 0) {
                 if (!(caller is ConsolePlayer))
                     LoonePermissions.GameHook.OpenSteamBrowser(caller, "https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
                 else
                     RocketLogger.Log("https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
+
+                return;
+            }
 
             string[] args = new string[command.Length - 1];
 
