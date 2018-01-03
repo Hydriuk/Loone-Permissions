@@ -78,15 +78,22 @@ namespace LoonePermissions
             MySqlManager.Initialize();
             CommandManager.Initialize();
 
-            orignal = R.Permissions;
-            Provider = new MySqlProvider();
-            R.Permissions = Provider;
+            Invoke("LateInit", 1f);
         }
 
         protected override void Unload()
         {
             if (orignal != null)
                 R.Permissions = orignal;
+        }
+
+        public void LateInit()
+        {
+            orignal = R.Permissions;
+            Provider = new MySqlProvider();
+            R.Permissions = Provider;
+
+            RocketLogger.Log(string.Format("Late Initialize was successful!"), ConsoleColor.Yellow);
         }
 
         public override TranslationList DefaultTranslations
