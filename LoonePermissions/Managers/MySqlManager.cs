@@ -15,19 +15,23 @@ namespace LoonePermissions.Managers
     public static class MySqlManager
     {
 
-        const string GROUP_TABLE = "loone_groups";
-        const string PERMISSION_TABLE = "loone_permissions";
-        const string PLAYER_TABLE = "loone_players";
+        static string GROUP_TABLE;
+        static string PERMISSION_TABLE;
+        static string PLAYER_TABLE;
 
-        const string GROUP_TABLE_CREATE = "CREATE TABLE `" + GROUP_TABLE + "` (`groupid` VARCHAR(64) NOT NULL UNIQUE, `groupname` VARCHAR(64) NOT NULL, `parent` VARCHAR(64), `prefix` VARCHAR(64), `suffix` VARCHAR(64), `color` VARCHAR(7) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
-        const string PERMISSION_TABLE_CREATE = "CREATE TABLE `" + PERMISSION_TABLE + "` (`groupid` VARCHAR(64) NOT NULL, `permission` VARCHAR(64) NOT NULL, `cooldown` INTEGER DEFAULT '0')";
-        const string PLAYER_TABLE_CREATE = "CREATE TABLE `" + PLAYER_TABLE + "` (`csteamid` BIGINT NOT NULL, `groupid` VARCHAR(64) NOT NULL)";
+        static string GROUP_TABLE_CREATE => "CREATE TABLE `" + GROUP_TABLE + "` (`groupid` VARCHAR(64) NOT NULL UNIQUE, `groupname` VARCHAR(64) NOT NULL, `parent` VARCHAR(64), `prefix` VARCHAR(64), `suffix` VARCHAR(64), `color` VARCHAR(7) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
+        static string PERMISSION_TABLE_CREATE => "CREATE TABLE `" + PERMISSION_TABLE + "` (`groupid` VARCHAR(64) NOT NULL, `permission` VARCHAR(64) NOT NULL, `cooldown` INTEGER DEFAULT '0')";
+        static string PLAYER_TABLE_CREATE => "CREATE TABLE `" + PLAYER_TABLE + "` (`csteamid` BIGINT NOT NULL, `groupid` VARCHAR(64) NOT NULL)";
 
         static MySqlConnection Connection => connection;
         static MySqlConnection connection;
 
         public static void Initialize()
         {
+            GROUP_TABLE = LoonePermissionsConfig.DatabaseSettings.GroupsTableName;
+            PERMISSION_TABLE = LoonePermissionsConfig.DatabaseSettings.PermissionsTableName;
+            PLAYER_TABLE = LoonePermissionsConfig.DatabaseSettings.PlayerTableName;
+
             connection = new MySqlConnection(string.Format("SERVER={0};DATABASE={1};UID={2};PASSWORD={3};PORT={4};", LoonePermissionsConfig.DatabaseSettings.Address, LoonePermissionsConfig.DatabaseSettings.Database, LoonePermissionsConfig.DatabaseSettings.Username, LoonePermissionsConfig.DatabaseSettings.Password, LoonePermissionsConfig.DatabaseSettings.Port));
 
             MySqlCommand cmd1 = connection.CreateCommand();
@@ -46,8 +50,7 @@ namespace LoonePermissions.Managers
 
             TryClose();
 
-            if (obj1 == null)
-            {
+            if (obj1 == null) {
                 TryOpen();
 
                 MySqlCommand cmd = connection.CreateCommand();
@@ -60,8 +63,7 @@ namespace LoonePermissions.Managers
                 CreateGroup("default");
             }
 
-            if (obj2 == null)
-            {
+            if (obj2 == null) {
                 TryOpen();
 
                 MySqlCommand cmd = connection.CreateCommand();
@@ -77,8 +79,7 @@ namespace LoonePermissions.Managers
                 AddPermission("default", "compass", 60);
             }
 
-            if (obj3 == null)
-            {
+            if (obj3 == null) {
                 TryOpen();
 
                 MySqlCommand cmd = connection.CreateCommand();
@@ -102,8 +103,7 @@ namespace LoonePermissions.Managers
 
             RocketPermissionsGroup group;
 
-            if (dr1.Read())
-            {
+            if (dr1.Read()) {
 
                 group = new RocketPermissionsGroup()
                 {
@@ -122,8 +122,7 @@ namespace LoonePermissions.Managers
                 MySqlCommand cmd2 = Connection.CreateCommand();
                 cmd2.CommandText = string.Format("SELECT `csteamid` FROM `{0}` WHERE `groupid`='{1}'", PLAYER_TABLE, groupId);
                 MySqlDataReader dr2 = cmd2.ExecuteReader();
-                while (dr2.Read())
-                {
+                while (dr2.Read()) {
                     group.Members.Add(dr2.GetString(0));
                 }
                 TryClose();
@@ -133,15 +132,12 @@ namespace LoonePermissions.Managers
                 MySqlCommand cmd3 = Connection.CreateCommand();
                 cmd3.CommandText = string.Format("SELECT * FROM `{0}` WHERE `groupid`='{1}'", PERMISSION_TABLE, groupId);
                 MySqlDataReader dr3 = cmd3.ExecuteReader();
-                while (dr3.Read())
-                {
+                while (dr3.Read()) {
                     group.Permissions.Add(new Permission(dr3.GetString(1), dr3.GetUInt32(2)));
                 }
                 TryClose();
 
-            }
-            else
-            {
+            } else {
                 TryClose();
                 return null; // no such group eh
             }
@@ -151,12 +147,9 @@ namespace LoonePermissions.Managers
 
         public static void TryOpen()
         {
-            try
-            {
+            try {
                 Connection.Open();
-            }
-            catch
-            {
+            } catch {
                 Logger.Log("LoonePermissions caught a connection error! Just ignore this message :D", ConsoleColor.Yellow);
                 Connection.Close();
                 Connection.Open();
@@ -165,12 +158,9 @@ namespace LoonePermissions.Managers
 
         public static void TryClose()
         {
-            try
-            {
+            try {
                 Connection.Close();
-            }
-            catch
-            {
+            } catch {
                 Logger.Log("LoonePermissions caught a connection error! Just ignore this message :D", ConsoleColor.Yellow);
             }
         }
@@ -209,15 +199,12 @@ namespace LoonePermissions.Managers
             bool wasSuccess = false;
             MySqlCommand cmd1 = Connection.CreateCommand();
 
-            switch (prop)
-            {
+            switch (prop) {
                 case EGroupProperty.COLOR:
-                    if (IsValidColor(value, out string newVal))
-                    {
+                    if (IsValidColor(value, out string newVal)) {
                         wasSuccess = true;
                         cmd1.CommandText = string.Format("UPDATE `{0}` SET `color`='{1}' WHERE `groupid`='{2}'", GROUP_TABLE, newVal, groupId);
-                    }
-                    else
+                    } else
                         wasSuccess = false;
                     break;
                 case EGroupProperty.NAME:
@@ -237,12 +224,10 @@ namespace LoonePermissions.Managers
                     wasSuccess = true;
                     break;
                 case EGroupProperty.PRIORITY:
-                    if (short.TryParse(value, out short i))
-                    {
+                    if (short.TryParse(value, out short i)) {
                         cmd1.CommandText = string.Format("UPDATE `{0}` SET `priority`='{1}' WHERE `groupid`='{2}'", GROUP_TABLE, value, groupId);
                         wasSuccess = true;
-                    }
-                    else
+                    } else
                         wasSuccess = false;
 
                     break;
@@ -262,7 +247,8 @@ namespace LoonePermissions.Managers
         {
             MySqlCommand cmd1 = Connection.CreateCommand();
 
-            cmd1.CommandText = string.Format("SELECT `csteamid` FROM `{0}`", PLAYER_TABLE, y, x);
+            //Why was this originally not like this?
+            cmd1.CommandText = string.Format("SELECT `csteamid` FROM `{0}` WHERE `groupid`='{1}'", PLAYER_TABLE, x);
 
             List<ulong> ids = new List<ulong>();
 
@@ -272,8 +258,7 @@ namespace LoonePermissions.Managers
                 ids.Add(dr.GetUInt64(0));
             TryClose();
 
-            foreach (ulong id in ids)
-            {
+            foreach (ulong id in ids) {
                 RemovePlayerFromGroup(id, x);
                 if (require)
                     AddPlayerToGroup(id, y);
@@ -320,7 +305,7 @@ namespace LoonePermissions.Managers
                 return true;
 
             string newVal = "";
-            if (!value.StartsWith("#"))
+            if (!value.StartsWith("#", StringComparison.Ordinal))
                 newVal = "#" + value;
             else
                 newVal = value;
@@ -340,8 +325,7 @@ namespace LoonePermissions.Managers
             cmd1.CommandText = string.Format("SELECT `permission`, `cooldown` FROM `{0}` WHERE `groupid`='{1}'", PERMISSION_TABLE, groupId);
             cmd2.CommandText = string.Format("SELECT `parent` FROM `{0}` WHERE `groupid`='{1}'", GROUP_TABLE, groupId);
 
-            if (includeParents)
-            {
+            if (includeParents) {
                 TryOpen();
                 object obj = cmd2.ExecuteScalar();
 
@@ -356,8 +340,7 @@ namespace LoonePermissions.Managers
             TryOpen();
             MySqlDataReader dr = cmd1.ExecuteReader();
 
-            while (dr.Read())
-            {
+            while (dr.Read()) {
                 perms.Add(new Permission(dr.GetString(0), dr.GetUInt32(1)));
             }
             TryClose();
@@ -375,18 +358,16 @@ namespace LoonePermissions.Managers
             TryOpen();
             MySqlDataReader dr = cmd1.ExecuteReader();
 
-            while (dr.Read())
-            {
+            while (dr.Read()) {
                 groups.Add(dr.GetString(0));
             }
 
             TryClose();
 
-                if (groups.Count == 0)
-                {
-                    groups.Add(LoonePermissionsConfig.DefaultGroup.ToLower());
-                }
-            
+            if (groups.Count == 0) {
+                groups.Add(LoonePermissionsConfig.DefaultGroup.ToLower());
+            }
+
 
             return groups.ToArray();
         }
@@ -410,14 +391,12 @@ namespace LoonePermissions.Managers
 
             string[] currentGroup = GetPlayerGroups(player, true);
 
-            if(groupId == LoonePermissionsConfig.DefaultGroup && currentGroup[0] == LoonePermissionsConfig.DefaultGroup) {
+            if (groupId == LoonePermissionsConfig.DefaultGroup && currentGroup[0] == LoonePermissionsConfig.DefaultGroup) {
                 return RocketPermissionsProviderResult.Success;
             }
 
-            for (int i = 0; i < currentGroup.Length; i++)
-            {
-                if (groupId == currentGroup[i])
-                {
+            for (int i = 0; i < currentGroup.Length; i++) {
+                if (groupId == currentGroup[i]) {
                     return RocketPermissionsProviderResult.UnspecifiedError;
                 }
             }
@@ -453,7 +432,7 @@ namespace LoonePermissions.Managers
                 if (currentGroup[0] == LoonePermissionsConfig.DefaultGroup || currentGroup[1] == LoonePermissionsConfig.DefaultGroup) {
                     RemovePlayerFromGroup(player, LoonePermissionsConfig.DefaultGroup);
                 }
-            }            
+            }
 
         SUCCESS:
 
@@ -548,8 +527,7 @@ namespace LoonePermissions.Managers
             RocketPermissions p = new XMLFileAsset<RocketPermissions>(Rocket.Core.Environment.PermissionFile, null, null).Instance;
             LoonePermissionsConfig.SetDefaultGroup(p.DefaultGroup);
 
-            foreach (RocketPermissionsGroup group in p.Groups)
-            {
+            foreach (RocketPermissionsGroup group in p.Groups) {
                 CreateGroup(group.Id);
                 if (group.Color != null) UpdateGroup(EGroupProperty.COLOR, group.Color, group.Id);
                 if (group.ParentGroup != null) UpdateGroup(EGroupProperty.PARENT, group.ParentGroup, group.Id);
@@ -558,18 +536,15 @@ namespace LoonePermissions.Managers
                 if (group.DisplayName != null) UpdateGroup(EGroupProperty.NAME, group.DisplayName, group.Id);
                 UpdateGroup(EGroupProperty.PRIORITY, group.Priority.ToString(), group.Id);
 
-                foreach (Permission perm in group.Permissions)
-                {
+                foreach (Permission perm in group.Permissions) {
                     string name = perm.Name;
                     name = name.Replace("-", "~");
 
                     AddPermission(group.Id, name, (int)perm.Cooldown);
                 }
 
-                foreach (string player in group.Members)
-                {
-                    if (ulong.TryParse(player, out ulong id))
-                    {
+                foreach (string player in group.Members) {
+                    if (ulong.TryParse(player, out ulong id)) {
                         AddPlayerToGroup(id, group.Id);
                     }
                 }

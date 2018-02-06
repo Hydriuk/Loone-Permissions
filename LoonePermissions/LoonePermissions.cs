@@ -41,21 +41,16 @@ namespace LoonePermissions
 
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            for (int i = 0; i < assemblies.Length; i++)
-            {
-                if (assemblies[i].GetName().Name == "Assembly-CSharp")
-                {
+            for (int i = 0; i < assemblies.Length; i++) {
+                if (assemblies[i].GetName().Name == "Assembly-CSharp") {
                     GameAssembly = assemblies[i];
                     break;
                 }
             }
 
-            for (int i = 0; i < hooks.Count; i++)
-            {
-                for (int ii = 0; ii < assemblies.Length; ii++)
-                {
-                    if (hooks[i].DeterminingAssembly == assemblies[ii].GetName().Name)
-                    {
+            for (int i = 0; i < hooks.Count; i++) {
+                for (int ii = 0; ii < assemblies.Length; ii++) {
+                    if (hooks[i].DeterminingAssembly == assemblies[ii].GetName().Name) {
                         GameHook = hooks[i];
                         RocketAssembly = assemblies[ii];
                         goto FoundRocketAssembly;
@@ -98,8 +93,7 @@ namespace LoonePermissions
 
         public override TranslationList DefaultTranslations
         {
-            get
-            {
+            get {
                 return new TranslationList {
                     { "invalid_args", "You have specified an invalid arguement!" },
                     { "invalid_perms", "You don't have permission to do this!" },
@@ -138,7 +132,6 @@ namespace LoonePermissions
     [JsonObject(MemberSerialization.OptIn)]
     public class LoonePermissionsConfig
     {
-
         static string Directory = Rocket.Core.Environment.PluginsDirectory + "/LoonePermissions/Config.json";
         static string Directory_Errored = Rocket.Core.Environment.PluginsDirectory + "/LoonePermissions/Config_Errored.json";
 
@@ -155,23 +148,17 @@ namespace LoonePermissions
 
         public static void Initialize()
         {
-            if (File.Exists(Directory))
-            {
+            if (File.Exists(Directory)) {
                 string config = File.ReadAllText(Directory);
-                try
-                {
+                try {
                     instance = JsonConvert.DeserializeObject<LoonePermissionsConfig>(config);
-                }
-                catch
-                {
+                } catch {
                     File.WriteAllText(Directory_Errored, config);
                     LoadDefaultConfig();
                     SaveConfig();
                     RocketLogger.LogError("Config failed to load! Reverting to default settings...");
                 }
-            }
-            else
-            {
+            } else {
                 LoadDefaultConfig();
                 SaveConfig();
             }
@@ -188,7 +175,7 @@ namespace LoonePermissions
             instance = new LoonePermissionsConfig
             {
                 defaultGroup = "default",
-                databaseSettings = new MySqlSettings { Database = "unturned", Username = "root", Password = "toor", Address = "127.0.0.1", Port = 3306 }
+                databaseSettings = new MySqlSettings { Database = "unturned", Username = "root", Password = "toor", Address = "127.0.0.1", Port = 3306, PlayerTableName = "loone_players", GroupsTableName = "loone_groups", PermissionsTableName = "loone_permissions" }
             };
         }
 
@@ -205,6 +192,10 @@ namespace LoonePermissions
             public string Password;
             public string Address;
             public ushort Port;
+
+            public string PlayerTableName;
+            public string PermissionsTableName;
+            public string GroupsTableName;
         }
     }
 }
