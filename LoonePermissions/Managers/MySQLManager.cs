@@ -5,8 +5,16 @@ using System.Text;
 
 namespace ChubbyQuokka.LoonePermissions.Managers
 {
-    internal static class MySQLManager
+    internal static class MySqlManager
     {
+        internal static void Initialize()
+        {
 
+        }
+
+        internal static void Destroy()
+        {
+
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace ChubbyQuokka.LoonePermissions.API
 {
-    public interface ILooneCommand
+    internal interface ILooneCommand
     {
         string Help { get; }
         void Excecute(IRocketPlayer caller, string[] args);

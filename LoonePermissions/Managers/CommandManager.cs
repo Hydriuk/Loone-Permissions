@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 using ChubbyQuokka.LoonePermissions;
 using ChubbyQuokka.LoonePermissions.API;
-using ChubbyQuokka.LoonePermissions.Commands;
 using ChubbyQuokka.LoonePermissions.Managers;
 
 using Rocket.API;
@@ -76,7 +75,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
 namespace LoonePermissions
 {
-    public class LooneCommand : IRocketCommand
+    public sealed class LooneCommand : IRocketCommand
     {
         public AllowedCaller AllowedCaller => AllowedCaller.Both;
 

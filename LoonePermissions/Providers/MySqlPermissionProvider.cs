@@ -1,16 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using ChubbyQuokka.LoonePermissions.Managers;
 
 using Rocket.API;
 using Rocket.API.Serialisation;
-using Rocket.Core.Logging;
 
 namespace ChubbyQuokka.LoonePermissions.Providers
 {
-    public class MySqlPermissionProvider : IRocketPermissionsProvider
+    public sealed class MySqlPermissionProvider : IRocketPermissionsProvider
     {
         public RocketPermissionsProviderResult AddGroup(RocketPermissionsGroup group) => PermissionManager.AddGroupBlocking(group);
 

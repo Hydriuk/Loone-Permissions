@@ -27,7 +27,6 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         internal static void Destroy()
         {
             RunThread = false;
-
             if (WorkerThread != null && WorkerThread.IsAlive){
                 WorkerThread.Join();
             }
@@ -72,7 +71,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             }
         }
 
-        public static void EnqueueNextThreadedTick(Action action)
+        public static void EnqueueWorkerThread(Action action)
         {
             lock (UnthreadedLock)
             {
@@ -80,7 +79,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             }
         }
 
-        public static void EnqueueNextTick(Action action)
+        public static void EnqueueMainThread(Action action)
         {
             lock (ThreadedLock)
             {

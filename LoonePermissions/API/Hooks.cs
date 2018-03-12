@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace ChubbyQuokka.LoonePermissions.Hooks
 {
-    public interface IGameHook
+    internal interface IGameHook
     {
         void Initialize();
 
@@ -18,7 +18,7 @@ namespace ChubbyQuokka.LoonePermissions.Hooks
         string DeterminingAssembly { get; }
     }
 
-    public class UnturnedProvider : IGameHook
+    internal sealed class UnturnedProvider : IGameHook
     {
         public string DeterminingAssembly => "Rocket.Unturned";
 

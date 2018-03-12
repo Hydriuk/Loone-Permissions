@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
 
@@ -14,20 +12,21 @@ using UnityEngine;
 
 using ChubbyQuokka.LoonePermissions.Hooks;
 using ChubbyQuokka.LoonePermissions.Managers;
+using ChubbyQuokka.LoonePermissions.Providers;
 
 namespace ChubbyQuokka.LoonePermissions
 {
-    public class LoonePermissionsPlugin : RocketPlugin
+    public sealed class LoonePermissionsPlugin : RocketPlugin
     {
         public static LoonePermissionsPlugin Instance { get; private set; }
-        //public static MySqlProvider Provider { get; private set; }
+        internal static MySqlPermissionProvider Provider { get; private set; }
         internal static Assembly GameAssembly { get; private set; }
         internal static Assembly RocketAssembly { get; private set; }
-        public static IGameHook GameHook { get; private set; }
+        internal static IGameHook GameHook { get; private set; }
 
         static List<IGameHook> hooks = new List<IGameHook>();
 
-        static IRocketPermissionsProvider orignal;
+        static IRocketPermissionsProvider RocketPermissionProvider;
 
         protected override void Load()
         {
@@ -66,7 +65,7 @@ namespace ChubbyQuokka.LoonePermissions
             GameHook.Initialize();
 
             ThreadedWorkManager.Initialize();
-            //MySqlManager.Initialize();
+            MySqlManager.Initialize();
             CommandManager.Initialize();
 
             Invoke("LateInit", 1f);
@@ -74,17 +73,23 @@ namespace ChubbyQuokka.LoonePermissions
 
         protected override void Unload()
         {
-            if (orignal != null)
-                R.Permissions = orignal;
+            if (RocketPermissionProvider != null)
+                R.Permissions = RocketPermissionProvider;
 
             ThreadedWorkManager.Destroy();
+            MySqlManager.Destroy();
+        }
+
+        void Update()
+        {
+            ThreadedWorkManager.Update();
         }
 
         void LateInit()
         {
-            //orignal = R.Permissions;
-            //Provider = new MySqlProvider();
-            //R.Permissions = Provider;
+            RocketPermissionProvider = R.Permissions;
+            Provider = new MySqlPermissionProvider();
+            R.Permissions = Provider;
 
             RocketLogger.Log(string.Format("Late Initialize was successful!"), ConsoleColor.Yellow);
         }
@@ -128,7 +133,7 @@ namespace ChubbyQuokka.LoonePermissions
     }
 
     
-    public class LoonePermissionsConfig : IRocketPluginConfiguration
+    public sealed class LoonePermissionsConfig : IRocketPluginConfiguration
     {
         public string DefaultGroup;
 
