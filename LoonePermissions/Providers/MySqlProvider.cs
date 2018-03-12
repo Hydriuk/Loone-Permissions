@@ -6,12 +6,72 @@ using LoonePermissions.Managers;
 
 using Rocket.API;
 using Rocket.API.Serialisation;
+using Rocket.Core.Logging;
 
 namespace LoonePermissions.Providers
 {
+    public class MySqlPermissionProvider : IRocketPermissionsProvider
+    {
+        public RocketPermissionsProviderResult AddGroup(RocketPermissionsGroup group)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RocketPermissionsProviderResult AddPlayerToGroup(string groupId, IRocketPlayer player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RocketPermissionsProviderResult DeleteGroup(string groupId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RocketPermissionsGroup GetGroup(string groupId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<RocketPermissionsGroup> GetGroups(IRocketPlayer player, bool includeParentGroups)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<Permission> GetPermissions(IRocketPlayer player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<Permission> GetPermissions(IRocketPlayer player, List<string> requestedPermissions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool HasPermission(IRocketPlayer player, List<string> requestedPermissions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Reload()
+        {
+            Logger.LogWarning("It is not necessary to reload permissions with this plugin!");
+        }
+
+        public RocketPermissionsProviderResult RemovePlayerFromGroup(string groupId, IRocketPlayer player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RocketPermissionsProviderResult SaveGroup(RocketPermissionsGroup group)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /*
     public class MySqlProvider : IRocketPermissionsProvider
     {
-
+        
         public RocketPermissionsProviderResult AddPlayerToGroup(string groupId, IRocketPlayer player)
         {
             return MySqlManager.AddPlayerToGroup(ulong.Parse(player.Id), groupId);
@@ -106,4 +166,5 @@ namespace LoonePermissions.Providers
             return RocketPermissionsProviderResult.UnspecifiedError;
         }
     }
+    */
 }

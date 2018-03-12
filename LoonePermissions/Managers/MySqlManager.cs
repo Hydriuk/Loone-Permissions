@@ -11,10 +11,9 @@ using MySql.Data.MySqlClient;
 using LoonePermissions.API;
 
 namespace LoonePermissions.Managers
-{
+{/*
     public static class MySqlManager
     {
-
         static string GROUP_TABLE;
         static string PERMISSION_TABLE;
         static string PLAYER_TABLE;
@@ -551,4 +550,5 @@ namespace LoonePermissions.Managers
             }
         }
     }
+    */
 }

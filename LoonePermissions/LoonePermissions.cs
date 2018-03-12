@@ -23,7 +23,7 @@ namespace LoonePermissions
     public class LoonePermissions : RocketPlugin
     {
         public static LoonePermissions Instance { get; private set; }
-        public static MySqlProvider Provider { get; private set; }
+        //public static MySqlProvider Provider { get; private set; }
         public static Assembly GameAssembly { get; private set; }
         public static Assembly RocketAssembly { get; private set; }
         public static IGameHook GameHook { get; private set; }
@@ -37,7 +37,6 @@ namespace LoonePermissions
             Instance = this;
 
             hooks.Add(new UnturnedProvider());
-            hooks.Add(new TLFProvider());
 
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -70,7 +69,7 @@ namespace LoonePermissions
             GameHook.Initialize();
 
             LoonePermissionsConfig.Initialize();
-            MySqlManager.Initialize();
+            //MySqlManager.Initialize();
             CommandManager.Initialize();
 
             Invoke("LateInit", 1f);
@@ -84,9 +83,9 @@ namespace LoonePermissions
 
         public void LateInit()
         {
-            orignal = R.Permissions;
-            Provider = new MySqlProvider();
-            R.Permissions = Provider;
+            //orignal = R.Permissions;
+            //Provider = new MySqlProvider();
+            //R.Permissions = Provider;
 
             RocketLogger.Log(string.Format("Late Initialize was successful!"), ConsoleColor.Yellow);
         }

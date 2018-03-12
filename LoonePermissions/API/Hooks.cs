@@ -59,35 +59,4 @@ namespace LoonePermissions.Hooks
             SayToServer.Invoke(null, new object[] { text, c });
         }
     }
-
-    public class TLFProvider : IGameHook
-    {
-        public string DeterminingAssembly => "Rocket.TLF";
-
-        MethodInfo SayToPlayer { get; set; }
-        MethodInfo SayToServer { get; set; }
-        MethodInfo OpenURLInSteamOverlay { get; set; }
-
-        public void Initialize()
-        {
-            SayToPlayer = LoonePermissions.GameAssembly.GetType("ChubbyQuokka.Networking.Provider").GetMethod("MessagePlayer", new Type[] { typeof(ulong), typeof(string), typeof(Color) });
-            SayToServer = LoonePermissions.RocketAssembly.GetType("Rocket.TLF.Chat").GetMethod("Broadcast", new Type[] { typeof(string), typeof(Color) });
-            OpenURLInSteamOverlay = LoonePermissions.GameAssembly.GetType("ChubbyQuokka.Steam.SteamProvider").GetMethod("OpenInSteamBrowser", new Type[] { typeof(ulong), typeof(string) });
-        }
-
-        public void OpenSteamBrowser(IRocketPlayer p, string url)
-        {
-            OpenURLInSteamOverlay.Invoke(null, new object[] { ulong.Parse(p.Id), url });
-        }
-
-        public void Say(IRocketPlayer p, string text, Color c)
-        {
-            SayToPlayer.Invoke(null, new object[] { ulong.Parse(p.Id), text, c });
-        }
-
-        public void Say(string text, Color c)
-        {
-            SayToServer.Invoke(null, new object[] { text, c });
-        }
-    }
 }

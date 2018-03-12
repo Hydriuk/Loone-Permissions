@@ -9,7 +9,7 @@ using LoonePermissions.Managers;
 using LoonePermissions.API;
 
 namespace LoonePermissions.Commands
-{
+{/*
     public class CommandGroup : ILooneCommand
     {
         public string Help => "Modifies a group!";
@@ -272,4 +272,5 @@ namespace LoonePermissions.Commands
             LoonePermissions.Say(caller, "migrate_finish", Color.green);
         }
     }
+    */
 }

@@ -32,7 +32,6 @@ namespace LoonePermissions.Managers
 
         public static void Excecute(IRocketPlayer caller, string cmd, string[] args)
         {
-
             if (!TryGetCommand(cmd, out ILooneCommand command))
             {
                 LoonePermissions.Say(caller, "invalid_cmd", Color.red);
@@ -56,7 +55,9 @@ namespace LoonePermissions.Managers
         public static bool RegisterCommand(string str, ILooneCommand cmd)
         {
             if (commands.ContainsKey(str))
+            {
                 return false;
+            }
 
             commands.Add(str, cmd);
             return true;
@@ -90,9 +91,13 @@ namespace LoonePermissions
         {
             if (command.Length == 0) {
                 if (!(caller is ConsolePlayer))
+                {
                     LoonePermissions.GameHook.OpenSteamBrowser(caller, "https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
+                }
                 else
+                {
                     RocketLogger.Log("https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
+                }
 
                 return;
             }
@@ -100,7 +105,9 @@ namespace LoonePermissions
             string[] args = new string[command.Length - 1];
 
             for (int i = 1; i < command.Length; i++)
+            {
                 args[i - 1] = command[i];
+            }
 
             CommandManager.Excecute(caller, command[0], args);
         }
