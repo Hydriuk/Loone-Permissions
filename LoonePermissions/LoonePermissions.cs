@@ -16,17 +16,16 @@ using ChubbyQuokka.LoonePermissions.Providers;
 
 namespace ChubbyQuokka.LoonePermissions
 {
-    public sealed class LoonePermissionsPlugin : RocketPlugin
+    public sealed class LoonePermissionsPlugin : RocketPlugin<LoonePermissionsConfig>
     {
-        public static LoonePermissionsPlugin Instance { get; private set; }
-        internal static MySqlPermissionProvider Provider { get; private set; }
+        internal static LoonePermissionsPlugin Instance { get; private set; }
         internal static Assembly GameAssembly { get; private set; }
         internal static Assembly RocketAssembly { get; private set; }
         internal static IGameHook GameHook { get; private set; }
 
         static List<IGameHook> hooks = new List<IGameHook>();
-
         static IRocketPermissionsProvider RocketPermissionProvider;
+        static MySqlPermissionProvider Provider;
 
         protected override void Load()
         {
@@ -36,16 +35,21 @@ namespace ChubbyQuokka.LoonePermissions
 
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            for (int i = 0; i < assemblies.Length; i++) {
-                if (assemblies[i].GetName().Name == "Assembly-CSharp") {
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                if (assemblies[i].GetName().Name == "Assembly-CSharp")
+                {
                     GameAssembly = assemblies[i];
                     break;
                 }
             }
 
-            for (int i = 0; i < hooks.Count; i++) {
-                for (int ii = 0; ii < assemblies.Length; ii++) {
-                    if (hooks[i].DeterminingAssembly == assemblies[ii].GetName().Name) {
+            for (int i = 0; i < hooks.Count; i++)
+            {
+                for (int ii = 0; ii < assemblies.Length; ii++)
+                {
+                    if (hooks[i].DeterminingAssembly == assemblies[ii].GetName().Name)
+                    {
                         GameHook = hooks[i];
                         RocketAssembly = assemblies[ii];
                         goto FoundRocketAssembly;
@@ -57,10 +61,12 @@ namespace ChubbyQuokka.LoonePermissions
             UnloadPlugin();
             return;
 
-        FoundRocketAssembly:
+            FoundRocketAssembly:
+
+            hooks.Clear();
 
             RocketLogger.Log(string.Format("Welcome to Loone Permissions v{0}!", Assembly.GetName().Version), ConsoleColor.Yellow);
-            RocketLogger.Log(string.Format("Plugin is now running in compatibility mode with: {0}", GameHook.DeterminingAssembly), ConsoleColor.Yellow);
+            RocketLogger.Log(string.Format("Plugin is now running in compatibility mode with: {0}.", GameHook.DeterminingAssembly), ConsoleColor.Yellow);
 
             GameHook.Initialize();
 
@@ -96,27 +102,27 @@ namespace ChubbyQuokka.LoonePermissions
 
         public override TranslationList DefaultTranslations =>  new TranslationList
         {
-            { "invalid_args", "You have specified an invalid arguement!" },
-            { "invalid_perms", "You don't have permission to do this!" },
-            { "invalid_cmd", "That commands doesn't exist!" },
-            { "invalid_color", "You specified an invalid color!" },
-            { "invalid_num", "Please specify an actual number!" },
-            { "group_create", "You have created the group: {0}!" },
-            { "group_delete", "You have deleted the group: {0}, all players in this group were moved to {1}!" },
-            { "group_delete_default", "You can't delete the default group!" },
-            { "group_default", "You have changed the default group to {0}!" },
-            { "group_default_already", "This is already the default group!" },
-            { "group_exists", "That group already exists!" },
-            { "group_not_exists", "That group doesn't exist!" },
-            { "group_modified", "You have set the {0} of {1} to {2}!" },
-            { "perm_added", "The permission {0} has been added to {1} with a cooldown of {2}!" },
-            { "perm_removed", "The permission {0} has been removed from {1}!" },
-            { "perm_exists", "The group {0} already has the permission {1} with a cooldown of {2}! " },
-            { "perm_not_exists", "The group {0} doesn't have the permission {1}!" },
-            { "perm_modified", "The cooldown for {0} in the group {1} has been set to {2}!"},
-            { "migrate_start", "The migration from XML to MySQL has started!"},
-            { "migrate_finish", "The migration has finished!"},
-            { "migrate_fail", "The migration failed!"}
+            { TranslationConstants.INVALID_ARGS, "You have specified an invalid arguement!" },
+            { TranslationConstants.INVALID_PERMS, "You don't have permission to do this!" },
+            { TranslationConstants.INVALID_CMD, "That commands doesn't exist!" },
+            { TranslationConstants.INVALID_COLOR, "You specified an invalid color!" },
+            { TranslationConstants.INVALID_NUM, "Please specify an actual number!" },
+            { TranslationConstants.GROUP_CREATE, "You have created the group: {0}!" },
+            { TranslationConstants.GROUP_DELETE, "You have deleted the group: {0}, all players in this group were moved to {1}!" },
+            { TranslationConstants.GROUP_DELETE_DEFAULT, "You can't delete the default group!" },
+            { TranslationConstants.GROUP_DEFAULT, "You have changed the default group to {0}!" },
+            { TranslationConstants.GROUP_DEFAULT_ALREADY, "This is already the default group!" },
+            { TranslationConstants.GROUP_EXISTS, "That group already exists!" },
+            { TranslationConstants.GROUP_NOT_EXISTS, "That group doesn't exist!" },
+            { TranslationConstants.GROUP_MODIFIED, "You have set the {0} of {1} to {2}!" },
+            { TranslationConstants.PERM_ADDED, "The permission {0} has been added to {1} with a cooldown of {2}!" },
+            { TranslationConstants.PERM_REMOVED, "The permission {0} has been removed from {1}!" },
+            { TranslationConstants.PERM_EXISTS, "The group {0} already has the permission {1} with a cooldown of {2}! " },
+            { TranslationConstants.PERM_NOT_EXISTS, "The group {0} doesn't have the permission {1}!" },
+            { TranslationConstants.PERM_MODIFIED, "The cooldown for {0} in the group {1} has been set to {2}!"},
+            { TranslationConstants.MIGRATE_START, "The migration from XML to MySQL has started!"},
+            { TranslationConstants.MIGRATE_FINISH, "The migration has finished!"},
+            { TranslationConstants.MIGRATE_FAIL, "The migration has failed!"}
         };
 
         internal static void Say(IRocketPlayer caller, string message, Color color, params object[] objs)
@@ -130,48 +136,30 @@ namespace ChubbyQuokka.LoonePermissions
                 GameHook.Say(caller, Instance.Translate(message, objs), color);
             }
         }
-    }
 
-    
-    public sealed class LoonePermissionsConfig : IRocketPluginConfiguration
-    {
-        public string DefaultGroup;
-
-        public MySqlSettings DatabaseSettings;
-        
-        public void LoadDefaults()
+        internal static class TranslationConstants
         {
-            DefaultGroup = "default";
-
-            DatabaseSettings = new MySqlSettings
-            {
-                Database = "unturned",
-                Username = "root",
-                Password = "toor",
-                Address = "127.0.0.1",
-                Port = 3306,
-                PlayerTableName = "loone_players",
-                GroupsTableName = "loone_groups",
-                PermissionsTableName = "loone_permissions"
-            };
-        }
-
-        internal void SetDefaultGroup(string groupId)
-        {
-            DefaultGroup = groupId;
-        }
-
-        public struct MySqlSettings
-        {
-            public string Database;
-            public string Username;
-            public string Password;
-            public string Address;
-            public ushort Port;
-
-            public string PlayerTableName;
-            public string PermissionsTableName;
-            public string GroupsTableName;
+            public const string INVALID_ARGS = "invalid_args";
+            public const string INVALID_PERMS = "invalid_perms";
+            public const string INVALID_CMD = "invalid_cmd";
+            public const string INVALID_COLOR = "invalid_color";
+            public const string INVALID_NUM = "invalid_num";
+            public const string GROUP_CREATE = "group_create";
+            public const string GROUP_DELETE = "group_delete";
+            public const string GROUP_DELETE_DEFAULT = "group_delete_default";
+            public const string GROUP_DEFAULT = "group_default";
+            public const string GROUP_DEFAULT_ALREADY = "group_default_already";
+            public const string GROUP_EXISTS = "group_exists";
+            public const string GROUP_NOT_EXISTS = "group_not_exists";
+            public const string GROUP_MODIFIED = "group_modified";
+            public const string PERM_ADDED = "perm_added";
+            public const string PERM_REMOVED = "perm_removed";
+            public const string PERM_EXISTS = "perm_exists";
+            public const string PERM_NOT_EXISTS = "perm_not_exists";
+            public const string PERM_MODIFIED = "perm_modified";
+            public const string MIGRATE_START = "migrate_start";
+            public const string MIGRATE_FINISH = "migrate_finish";
+            public const string MIGRATE_FAIL = "migrate_fail";
         }
     }
 }
