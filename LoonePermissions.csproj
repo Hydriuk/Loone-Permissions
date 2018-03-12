@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{9FAEB435-872C-4242-8DB0-DF02B94E78E6}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>LoonePermissions</RootNamespace>
+    <RootNamespace>ChubbyQuokka</RootNamespace>
     <AssemblyName>LoonePermissions</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
@@ -27,7 +27,7 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
-	<Reference Include="System" />
+    <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Management" />
     <Reference Include="System.Transactions" />
@@ -47,10 +47,6 @@
       <HintPath>Libraries\MySql.Data.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>Libraries\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>lib\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
@@ -67,10 +63,6 @@
       <HintPath>lib\Rocket.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Rocket.Unturned">
-      <HintPath>lib\Rocket.Unturned.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>lib\UnityEngine.dll</HintPath>
       <Private>False</Private>
@@ -81,10 +73,12 @@
     <Compile Include="LoonePermissions\API\ILooneCommand.cs" />
     <Compile Include="LoonePermissions\Commands\Commands.cs" />
     <Compile Include="LoonePermissions\Managers\CommandManager.cs" />
+    <Compile Include="LoonePermissions\Managers\MySQLManager.cs" />
+    <Compile Include="LoonePermissions\Managers\ThreadManager.cs" />
     <Compile Include="LoonePermissions\Providers\MySqlProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="LoonePermissions\LoonePermissions.cs" />
-    <Compile Include="LoonePermissions\Managers\MySqlManager.cs" />
+    <Compile Include="LoonePermissions\Managers\PermissionManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Libraries\I18N.dll">
