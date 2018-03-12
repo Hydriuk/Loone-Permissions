@@ -10,22 +10,19 @@ using Rocket.Core;
 using Rocket.Core.Plugins;
 using RocketLogger = Rocket.Core.Logging.Logger;
 
-using Newtonsoft.Json;
-
-using LoonePermissions.Providers;
-using LoonePermissions.Managers;
-using LoonePermissions.Hooks;
-
 using UnityEngine;
 
-namespace LoonePermissions
+using ChubbyQuokka.LoonePermissions.Hooks;
+using ChubbyQuokka.LoonePermissions.Managers;
+
+namespace ChubbyQuokka.LoonePermissions
 {
-    public class LoonePermissions : RocketPlugin
+    public class LoonePermissionsPlugin : RocketPlugin
     {
-        public static LoonePermissions Instance { get; private set; }
+        public static LoonePermissionsPlugin Instance { get; private set; }
         //public static MySqlProvider Provider { get; private set; }
-        public static Assembly GameAssembly { get; private set; }
-        public static Assembly RocketAssembly { get; private set; }
+        internal static Assembly GameAssembly { get; private set; }
+        internal static Assembly RocketAssembly { get; private set; }
         public static IGameHook GameHook { get; private set; }
 
         static List<IGameHook> hooks = new List<IGameHook>();
@@ -57,7 +54,7 @@ namespace LoonePermissions
                 }
             }
 
-            RocketLogger.Log("Failed to find any supporting games! Please only use this software with supported games.");
+            RocketLogger.Log("Failed to find any supporting games! Please only use this plugin with supported games.");
             UnloadPlugin();
             return;
 
@@ -68,7 +65,7 @@ namespace LoonePermissions
 
             GameHook.Initialize();
 
-            LoonePermissionsConfig.Initialize();
+            ThreadedWorkManager.Initialize();
             //MySqlManager.Initialize();
             CommandManager.Initialize();
 
@@ -79,9 +76,11 @@ namespace LoonePermissions
         {
             if (orignal != null)
                 R.Permissions = orignal;
+
+            ThreadedWorkManager.Destroy();
         }
 
-        public void LateInit()
+        void LateInit()
         {
             //orignal = R.Permissions;
             //Provider = new MySqlProvider();
@@ -90,98 +89,71 @@ namespace LoonePermissions
             RocketLogger.Log(string.Format("Late Initialize was successful!"), ConsoleColor.Yellow);
         }
 
-        public override TranslationList DefaultTranslations
+        public override TranslationList DefaultTranslations =>  new TranslationList
         {
-            get {
-                return new TranslationList {
-                    { "invalid_args", "You have specified an invalid arguement!" },
-                    { "invalid_perms", "You don't have permission to do this!" },
-                    { "invalid_cmd", "That commands doesn't exist!" },
-                    { "invalid_color", "You specified an invalid color!" },
-                    { "invalid_num", "Please specify an actual number!" },
-                    { "group_create", "You have created the group: {0}!" },
-                    { "group_delete", "You have deleted the group: {0}, all players in this group were moved to {1}!" },
-                    { "group_delete_default", "You can't delete the default group!" },
-                    { "group_default", "You have changed the default group to {0}!" },
-                    { "group_default_already", "This is already the default group!" },
-                    { "group_exists", "That group already exists!" },
-                    { "group_not_exists", "That group doesn't exist!" },
-                    { "group_modified", "You have set the {0} of {1} to {2}!" },
-                    { "perm_added", "The permission {0} has been added to {1} with a cooldown of {2}!" },
-                    { "perm_removed", "The permission {0} has been removed from {1}!" },
-                    { "perm_exists", "The group {0} already has the permission {1} with a cooldown of {2}! " },
-                    { "perm_not_exists", "The group {0} doesn't have the permission {1}!" },
-                    { "perm_modified", "The cooldown for {0} in the group {1} has been set to {2}!"},
-                    { "migrate_start", "The migration from XML to MySQL has started!"},
-                    { "migrate_finish", "The migration has finished!"},
-                    { "migrate_fail", "Migration failed!"}
-                };
-            }
-        }
+            { "invalid_args", "You have specified an invalid arguement!" },
+            { "invalid_perms", "You don't have permission to do this!" },
+            { "invalid_cmd", "That commands doesn't exist!" },
+            { "invalid_color", "You specified an invalid color!" },
+            { "invalid_num", "Please specify an actual number!" },
+            { "group_create", "You have created the group: {0}!" },
+            { "group_delete", "You have deleted the group: {0}, all players in this group were moved to {1}!" },
+            { "group_delete_default", "You can't delete the default group!" },
+            { "group_default", "You have changed the default group to {0}!" },
+            { "group_default_already", "This is already the default group!" },
+            { "group_exists", "That group already exists!" },
+            { "group_not_exists", "That group doesn't exist!" },
+            { "group_modified", "You have set the {0} of {1} to {2}!" },
+            { "perm_added", "The permission {0} has been added to {1} with a cooldown of {2}!" },
+            { "perm_removed", "The permission {0} has been removed from {1}!" },
+            { "perm_exists", "The group {0} already has the permission {1} with a cooldown of {2}! " },
+            { "perm_not_exists", "The group {0} doesn't have the permission {1}!" },
+            { "perm_modified", "The cooldown for {0} in the group {1} has been set to {2}!"},
+            { "migrate_start", "The migration from XML to MySQL has started!"},
+            { "migrate_finish", "The migration has finished!"},
+            { "migrate_fail", "The migration failed!"}
+        };
 
-        public static void Say(IRocketPlayer caller, string message, Color color, params object[] objs)
+        internal static void Say(IRocketPlayer caller, string message, Color color, params object[] objs)
         {
             if (caller is ConsolePlayer)
+            {
                 RocketLogger.Log(Instance.Translate(message, objs), ConsoleColor.Yellow);
+            }
             else
+            {
                 GameHook.Say(caller, Instance.Translate(message, objs), color);
+            }
         }
     }
 
-    [JsonObject(MemberSerialization.OptIn)]
-    public class LoonePermissionsConfig
+    
+    public class LoonePermissionsConfig : IRocketPluginConfiguration
     {
-        static string Directory = Rocket.Core.Environment.PluginsDirectory + "/LoonePermissions/Config.json";
-        static string Directory_Errored = Rocket.Core.Environment.PluginsDirectory + "/LoonePermissions/Config_Errored.json";
+        public string DefaultGroup;
 
-        static LoonePermissionsConfig instance;
-
-        public static string DefaultGroup => instance.defaultGroup;
-        public static MySqlSettings DatabaseSettings => instance.databaseSettings;
-
-        [JsonProperty(PropertyName = "DefaultGroup")]
-        string defaultGroup;
-
-        [JsonProperty(PropertyName = "MySQLSettings")]
-        MySqlSettings databaseSettings;
-
-        public static void Initialize()
+        public MySqlSettings DatabaseSettings;
+        
+        public void LoadDefaults()
         {
-            if (File.Exists(Directory)) {
-                string config = File.ReadAllText(Directory);
-                try {
-                    instance = JsonConvert.DeserializeObject<LoonePermissionsConfig>(config);
-                } catch {
-                    File.WriteAllText(Directory_Errored, config);
-                    LoadDefaultConfig();
-                    SaveConfig();
-                    RocketLogger.LogError("Config failed to load! Reverting to default settings...");
-                }
-            } else {
-                LoadDefaultConfig();
-                SaveConfig();
-            }
-        }
+            DefaultGroup = "default";
 
-        public static void SaveConfig()
-        {
-            string json = JsonConvert.SerializeObject(instance, Formatting.Indented);
-            File.WriteAllText(Directory, json);
-        }
-
-        static void LoadDefaultConfig()
-        {
-            instance = new LoonePermissionsConfig
+            DatabaseSettings = new MySqlSettings
             {
-                defaultGroup = "default",
-                databaseSettings = new MySqlSettings { Database = "unturned", Username = "root", Password = "toor", Address = "127.0.0.1", Port = 3306, PlayerTableName = "loone_players", GroupsTableName = "loone_groups", PermissionsTableName = "loone_permissions" }
+                Database = "unturned",
+                Username = "root",
+                Password = "toor",
+                Address = "127.0.0.1",
+                Port = 3306,
+                PlayerTableName = "loone_players",
+                GroupsTableName = "loone_groups",
+                PermissionsTableName = "loone_permissions"
             };
         }
 
-        public static void SetDefaultGroup(string groupId)
+        internal void SetDefaultGroup(string groupId)
         {
-            instance.defaultGroup = groupId;
-            SaveConfig();
+            DefaultGroup = groupId;
         }
 
         public struct MySqlSettings

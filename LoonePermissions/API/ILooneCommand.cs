@@ -1,6 +1,6 @@
 ﻿using Rocket.API;
 
-namespace LoonePermissions.API
+namespace ChubbyQuokka.LoonePermissions.API
 {
     public interface ILooneCommand
     {
@@ -8,7 +8,7 @@ namespace LoonePermissions.API
         void Excecute(IRocketPlayer caller, string[] args);
     }
 
-    public enum EGroupProperty
+    internal enum EGroupProperty
     {
         NAME,
         PARENT,

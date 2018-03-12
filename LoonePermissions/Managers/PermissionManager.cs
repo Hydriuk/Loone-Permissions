@@ -8,9 +8,9 @@ using Rocket.Core.Assets;
 
 using MySql.Data.MySqlClient;
 
-using LoonePermissions.API;
+using ChubbyQuokka.LoonePermissions.API;
 
-namespace LoonePermissions.Managers
+namespace ChubbyQuokka.LoonePermissions.Managers
 {
     public static class PermissionManager
     {

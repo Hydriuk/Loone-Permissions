@@ -5,10 +5,10 @@ using RocketLogger = Rocket.Core.Logging.Logger;
 
 using UnityEngine;
 
-using LoonePermissions.Managers;
-using LoonePermissions.API;
+using ChubbyQuokka.LoonePermissions.Managers;
+using ChubbyQuokka.LoonePermissions.API;
 
-namespace LoonePermissions.Commands
+namespace ChubbyQuokka.LoonePermissions.Commands
 {/*
     public class CommandGroup : ILooneCommand
     {

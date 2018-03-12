@@ -2,11 +2,10 @@
 using System.Reflection;
 
 using Rocket.API;
-using RocketLogger = Rocket.Core.Logging.Logger;
 
 using UnityEngine;
 
-namespace LoonePermissions.Hooks
+namespace ChubbyQuokka.LoonePermissions.Hooks
 {
     public interface IGameHook
     {
@@ -33,12 +32,12 @@ namespace LoonePermissions.Hooks
 
         public void Initialize()
         {
-            SayToPlayer = LoonePermissions.RocketAssembly.GetType("Rocket.Unturned.Chat.UnturnedChat").GetMethod("Say", new Type[] { typeof(IRocketPlayer), typeof(string), typeof(Color) });
-            SayToServer = LoonePermissions.RocketAssembly.GetType("Rocket.Unturned.Chat.UnturnedChat").GetMethod("Say", new Type[] { typeof(string), typeof(Color) });
-            UPlayerType = LoonePermissions.RocketAssembly.GetType("Rocket.Unturned.Player.UnturnedPlayer");
+            SayToPlayer = LoonePermissionsPlugin.RocketAssembly.GetType("Rocket.Unturned.Chat.UnturnedChat").GetMethod("Say", new Type[] { typeof(IRocketPlayer), typeof(string), typeof(Color) });
+            SayToServer = LoonePermissionsPlugin.RocketAssembly.GetType("Rocket.Unturned.Chat.UnturnedChat").GetMethod("Say", new Type[] { typeof(string), typeof(Color) });
+            UPlayerType = LoonePermissionsPlugin.RocketAssembly.GetType("Rocket.Unturned.Player.UnturnedPlayer");
             SDGPlayerProperty = UPlayerType.GetProperty("Player");
             
-            OpenURLInSteamOverlay = LoonePermissions.GameAssembly.GetType("SDG.Unturned.Player").GetMethod("sendBrowserRequest", new Type[] { typeof(string), typeof(string) });
+            OpenURLInSteamOverlay = LoonePermissionsPlugin.GameAssembly.GetType("SDG.Unturned.Player").GetMethod("sendBrowserRequest", new Type[] { typeof(string), typeof(string) });
         }
 
         public void OpenSteamBrowser(IRocketPlayer p, string url)
