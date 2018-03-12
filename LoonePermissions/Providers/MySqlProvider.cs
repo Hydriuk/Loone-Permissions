@@ -12,60 +12,27 @@ namespace LoonePermissions.Providers
 {
     public class MySqlPermissionProvider : IRocketPermissionsProvider
     {
-        public RocketPermissionsProviderResult AddGroup(RocketPermissionsGroup group)
-        {
-            throw new NotImplementedException();
-        }
+        public RocketPermissionsProviderResult AddGroup(RocketPermissionsGroup group) => PermissionManager.AddGroupBlocking(group);
 
-        public RocketPermissionsProviderResult AddPlayerToGroup(string groupId, IRocketPlayer player)
-        {
-            throw new NotImplementedException();
-        }
+        public RocketPermissionsProviderResult AddPlayerToGroup(string groupId, IRocketPlayer player) => PermissionManager.AddPlayerToGroupBlocking(groupId, player);
 
-        public RocketPermissionsProviderResult DeleteGroup(string groupId)
-        {
-            throw new NotImplementedException();
-        }
+        public RocketPermissionsProviderResult DeleteGroup(string groupId) => PermissionManager.DeleteGroupBlocking(groupId);
 
-        public RocketPermissionsGroup GetGroup(string groupId)
-        {
-            throw new NotImplementedException();
-        }
+        public RocketPermissionsGroup GetGroup(string groupId) => PermissionManager.GetGroupBlocking(groupId);
 
-        public List<RocketPermissionsGroup> GetGroups(IRocketPlayer player, bool includeParentGroups)
-        {
-            throw new NotImplementedException();
-        }
+        public List<RocketPermissionsGroup> GetGroups(IRocketPlayer player, bool includeParentGroups) => PermissionManager.GetGroupsBlocking(player, includeParentGroups);
 
-        public List<Permission> GetPermissions(IRocketPlayer player)
-        {
-            throw new NotImplementedException();
-        }
+        public List<Permission> GetPermissions(IRocketPlayer player) => PermissionManager.GetPermissionsBlocking(player);
 
-        public List<Permission> GetPermissions(IRocketPlayer player, List<string> requestedPermissions)
-        {
-            throw new NotImplementedException();
-        }
+        public List<Permission> GetPermissions(IRocketPlayer player, List<string> requestedPermissions) => PermissionManager.GetPermissionsBlocking(player, requestedPermissions);
 
-        public bool HasPermission(IRocketPlayer player, List<string> requestedPermissions)
-        {
-            throw new NotImplementedException();
-        }
+        public bool HasPermission(IRocketPlayer player, List<string> requestedPermissions) => PermissionManager.HasPermissionBlocking(player, requestedPermissions);
 
-        public void Reload()
-        {
-            Logger.LogWarning("It is not necessary to reload permissions with this plugin!");
-        }
+        public void Reload() => PermissionManager.Reload();
 
-        public RocketPermissionsProviderResult RemovePlayerFromGroup(string groupId, IRocketPlayer player)
-        {
-            throw new NotImplementedException();
-        }
+        public RocketPermissionsProviderResult RemovePlayerFromGroup(string groupId, IRocketPlayer player) => PermissionManager.RemovePlayerFromGroupBlocking(groupId, player);
 
-        public RocketPermissionsProviderResult SaveGroup(RocketPermissionsGroup group)
-        {
-            throw new NotImplementedException();
-        }
+        public RocketPermissionsProviderResult SaveGroup(RocketPermissionsGroup group) => PermissionManager.SaveGroupBlocking(group);
     }
 
     /*

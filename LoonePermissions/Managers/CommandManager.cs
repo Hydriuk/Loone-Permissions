@@ -21,6 +21,7 @@ namespace LoonePermissions.Managers
         {
             commands = new Dictionary<string, ILooneCommand>();
 
+            /*
             RegisterCommand("create", new CommandCreate());
             RegisterCommand("delete", new CommandDelete());
             RegisterCommand("add", new CommandAdd());
@@ -28,6 +29,7 @@ namespace LoonePermissions.Managers
             RegisterCommand("default", new CommandRemove());
             RegisterCommand("group", new CommandGroup());
             RegisterCommand("migrate", new CommandMigrate());
+            */
         }
 
         public static void Excecute(IRocketPlayer caller, string cmd, string[] args)
