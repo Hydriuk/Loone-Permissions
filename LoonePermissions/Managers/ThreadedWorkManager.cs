@@ -16,7 +16,9 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
         static Thread WorkerThread;
 
-        static volatile bool RunThread; 
+        static volatile bool RunThread;
+
+        public static bool IsWorkerThread => Thread.CurrentThread.Name == WorkerThread.Name;
 
         internal static void Initialize()
         {
@@ -31,7 +33,9 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         internal static void Destroy()
         {
             RunThread = false;
-            if (WorkerThread != null && WorkerThread.IsAlive){
+
+            if (WorkerThread != null && WorkerThread.IsAlive)
+            {
                 WorkerThread.Join();
             }
 

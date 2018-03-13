@@ -15,13 +15,20 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         static MySqlConnection ThreadedConnection;
         static MySqlConnection RefreshConnection;
 
+        public static bool IsRefreshing => isRefreshing;
+        static volatile bool isRefreshing;
+
         static LoonePermissionsConfig._DatabaseSettings Settings => LoonePermissionsConfig.DatabaseSettings;
 
         public static void Initialize()
         {
             UnthreadedConnection = new MySqlConnection(Queries.Connection);
             ThreadedConnection = new MySqlConnection(Queries.Connection);
-            RefreshConnection = new MySqlConnection(Queries.Connection);
+
+            if (LoonePermissionsConfig.SyncModeSettings.Enabled)
+            {
+                RefreshConnection = new MySqlConnection(Queries.Connection);
+            }
 
             MySqlCommand cmd1 = UnthreadedConnection.CreateCommand();
             MySqlCommand cmd2 = UnthreadedConnection.CreateCommand();
@@ -36,6 +43,8 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             object obj1 = cmd1.ExecuteScalar();
             object obj2 = cmd2.ExecuteScalar();
             object obj3 = cmd3.ExecuteScalar();
+
+            UnthreadedConnection.Close();
 
             if (obj1 == null)
             {
@@ -93,13 +102,13 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
         public static void Destroy()
         {
-            UnthreadedConnection.Dispose();
+            UnthreadedConnection?.Dispose();
             UnthreadedConnection = null;
 
-            ThreadedConnection.Dispose();
+            ThreadedConnection?.Dispose();
             ThreadedConnection = null;
 
-            RefreshConnection.Dispose();
+            RefreshConnection?.Dispose();
             RefreshConnection = null;
         }
 
@@ -164,6 +173,8 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             public static string ShowTablesLikeGroupTable => $"SHOW TABLES LIKE '{Settings.GroupsTableName}'";
             public static string ShowTablesLikePermissionTable => $"SHOW TABLES LIKE '{Settings.PermissionsTableName}'";
             public static string ShowTablesLikePlayerTable => $"SHOW TABLES LIKE '{Settings.PlayerTableName}'";
+
+
         }
     }
 }
