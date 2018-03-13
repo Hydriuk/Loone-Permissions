@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
+using Rocket.API;
+using Rocket.API.Serialisation;
+using Rocket.Core.Logging;
 
 using MySql.Data.MySqlClient;
 
@@ -11,11 +13,15 @@ namespace ChubbyQuokka.LoonePermissions.Managers
     {
         static MySqlConnection UnthreadedConnection;
         static MySqlConnection ThreadedConnection;
+        static MySqlConnection RefreshConnection;
+
+        static LoonePermissionsConfig._DatabaseSettings Settings => LoonePermissionsConfig.DatabaseSettings;
 
         public static void Initialize()
         {
             UnthreadedConnection = new MySqlConnection(Queries.Connection);
             ThreadedConnection = new MySqlConnection(Queries.Connection);
+            RefreshConnection = new MySqlConnection(Queries.Connection);
 
             MySqlCommand cmd1 = UnthreadedConnection.CreateCommand();
             MySqlCommand cmd2 = UnthreadedConnection.CreateCommand();
@@ -42,7 +48,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                 UnthreadedConnection.Close();
 
-                //Logger.Log(string.Format("Generating table: {0}", GROUP_TABLE), ConsoleColor.Yellow);
+                Logger.Log($"Generating table: {Settings.GroupsTableName}", ConsoleColor.Yellow);
 
                 //CreateGroup("default");
             }
@@ -58,7 +64,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                 UnthreadedConnection.Close();
 
-                //Logger.Log(string.Format("Generating table: {0}", PERMISSION_TABLE), ConsoleColor.Yellow);
+                Logger.Log($"Generating table: {Settings.PermissionsTableName}", ConsoleColor.Yellow);
 
                 //AddPermission("default", "p", 0);
                 //AddPermission("default", "rocket", 0);
@@ -76,7 +82,12 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                 UnthreadedConnection.Close();
 
-                //Logger.Log(string.Format("Generating table: {0}", PLAYER_TABLE), ConsoleColor.Yellow);
+                Logger.Log($"Generating table: {Settings.PlayerTableName}", ConsoleColor.Yellow);
+            }
+
+            if (obj1 == null && obj2 == null && obj3 == null)
+            {
+                //Migrate();
             }
         }
 
@@ -87,12 +98,63 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
             ThreadedConnection.Dispose();
             ThreadedConnection = null;
+
+            RefreshConnection.Dispose();
+            RefreshConnection = null;
+        }
+
+        public static RocketPermissionsProviderResult AddGroup(RocketPermissionsGroup group)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static RocketPermissionsProviderResult AddPlayerToGroup(string groupId, IRocketPlayer player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static RocketPermissionsProviderResult DeleteGroup(string groupId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static RocketPermissionsGroup GetGroup(string groupId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static List<RocketPermissionsGroup> GetGroups(IRocketPlayer player, bool includeParentGroups)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static List<Permission> GetPermissions(IRocketPlayer player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static List<Permission> GetPermissions(IRocketPlayer player, List<string> requestedPermissions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool HasPermission(IRocketPlayer player, List<string> requestedPermissions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static RocketPermissionsProviderResult RemovePlayerFromGroup(string groupId, IRocketPlayer player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static RocketPermissionsProviderResult SaveGroup(RocketPermissionsGroup group)
+        {
+            throw new NotImplementedException();
         }
 
         static class Queries
         {
-            static LoonePermissionsConfig._DatabaseSettings Settings => LoonePermissionsConfig.DatabaseSettings;
-
             public static string Connection => $"SERVER={Settings.Address};DATABASE={Settings.Database};UID={Settings.Username};PASSWORD={Settings.Password};PORT={Settings.Port};";
 
             public static string CreateGroupTable => $"CREATE TABLE `{Settings.GroupsTableName}` (`groupid` VARCHAR(64) NOT NULL UNIQUE, `groupname` VARCHAR(64) NOT NULL, `parent` VARCHAR(64), `prefix` VARCHAR(64), `suffix` VARCHAR(64), `color` VARCHAR(7) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";

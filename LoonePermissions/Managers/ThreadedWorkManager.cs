@@ -21,7 +21,11 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         internal static void Initialize()
         {
             RunThread = true;
-            WorkerThread = new Thread(ThreadedWork);
+
+            WorkerThread = new Thread(ThreadedWork)
+            {
+                Name = "LoonePermissions_WorkerThread"
+            };
         }
 
         internal static void Destroy()

@@ -4,11 +4,6 @@ using System.Collections.Generic;
 using Rocket.API;
 using Rocket.API.Serialisation;
 using Rocket.Core.Logging;
-using Rocket.Core.Assets;
-
-using MySql.Data.MySqlClient;
-
-using ChubbyQuokka.LoonePermissions.API;
 
 namespace ChubbyQuokka.LoonePermissions.Managers
 {
@@ -20,107 +15,197 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         }
 
         #region Blocking Calls
-        public static RocketPermissionsProviderResult AddGroupBlocking(RocketPermissionsGroup group)
-        {
-            throw new NotImplementedException();
-        }
+        public static RocketPermissionsProviderResult AddGroupBlocking(RocketPermissionsGroup group) => MySqlManager.AddGroup(group);
 
-        public static RocketPermissionsProviderResult AddPlayerToGroupBlocking(string groupId, IRocketPlayer player)
-        {
-            throw new NotImplementedException();
-        }
+        public static RocketPermissionsProviderResult AddPlayerToGroupBlocking(string groupId, IRocketPlayer player) => MySqlManager.AddPlayerToGroup(groupId, player);
 
-        public static RocketPermissionsProviderResult DeleteGroupBlocking(string groupId)
-        {
-            throw new NotImplementedException();
-        }
+        public static RocketPermissionsProviderResult DeleteGroupBlocking(string groupId) => MySqlManager.DeleteGroup(groupId);
 
-        public static RocketPermissionsGroup GetGroupBlocking(string groupId)
-        {
-            throw new NotImplementedException();
-        }
+        public static RocketPermissionsGroup GetGroupBlocking(string groupId) => MySqlManager.GetGroup(groupId);
 
-        public static List<RocketPermissionsGroup> GetGroupsBlocking(IRocketPlayer player, bool includeParentGroups)
-        {
-            throw new NotImplementedException();
-        }
+        public static List<RocketPermissionsGroup> GetGroupsBlocking(IRocketPlayer player, bool includeParentGroups) => MySqlManager.GetGroups(player, includeParentGroups);
 
-        public static List<Permission> GetPermissionsBlocking(IRocketPlayer player)
-        {
-            throw new NotImplementedException();
-        } 
+        public static List<Permission> GetPermissionsBlocking(IRocketPlayer player) => MySqlManager.GetPermissions(player);
 
-        public static List<Permission> GetPermissionsBlocking(IRocketPlayer player, List<string> requestedPermissions)
-        {
-            throw new NotImplementedException();
-        }
+        public static List<Permission> GetPermissionsBlocking(IRocketPlayer player, List<string> requestedPermissions) => MySqlManager.GetPermissions(player, requestedPermissions);
 
-        public static bool HasPermissionBlocking(IRocketPlayer player, List<string> requestedPermissions)
-        {
-            throw new NotImplementedException();
-        }
+        public static bool HasPermissionBlocking(IRocketPlayer player, List<string> requestedPermissions) => MySqlManager.HasPermission(player, requestedPermissions);
 
-        public static RocketPermissionsProviderResult RemovePlayerFromGroupBlocking(string groupId, IRocketPlayer player)
-        {
-            throw new NotImplementedException();
-        }
+        public static RocketPermissionsProviderResult RemovePlayerFromGroupBlocking(string groupId, IRocketPlayer player) => MySqlManager.RemovePlayerFromGroup(groupId, player);
 
-        public static RocketPermissionsProviderResult SaveGroupBlocking(RocketPermissionsGroup group)
-        {
-            throw new NotImplementedException();
-        }
+        public static RocketPermissionsProviderResult SaveGroupBlocking(RocketPermissionsGroup group) => MySqlManager.SaveGroup(group);
 
         #endregion
         #region Async Calls
 
         public static void AddGroupAsync(RocketPermissionsGroup group, Action<RocketPermissionsProviderResult> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                RocketPermissionsProviderResult result = MySqlManager.AddGroup(group);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
 
         public static void AddPlayerToGroupAsync(string groupId, IRocketPlayer player, Action<RocketPermissionsProviderResult> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                RocketPermissionsProviderResult result = MySqlManager.AddPlayerToGroup(groupId, player);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
 
         public static void DeleteGroupAsync(string groupId, Action<RocketPermissionsProviderResult> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                RocketPermissionsProviderResult result = MySqlManager.DeleteGroup(groupId);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
 
         public static void GetGroupAsync(string groupId, Action<RocketPermissionsGroup> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                RocketPermissionsGroup result = MySqlManager.GetGroup(groupId);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
 
         public static void GetGroupsAsync(IRocketPlayer player, bool includeParentGroups, Action<List<RocketPermissionsGroup>> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                List<RocketPermissionsGroup> result = MySqlManager.GetGroups(player, includeParentGroups);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
 
         public static void GetPermissionsAsync(IRocketPlayer player, Action<List<Permission>> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                List<Permission> result = MySqlManager.GetPermissions(player);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
 
         public static void GetPermissionsAsync(IRocketPlayer player, List<string> requestedPermissions, Action<List<Permission>> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                List<Permission> result = MySqlManager.GetPermissions(player, requestedPermissions);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
 
         public static void HasPermissionAsync(IRocketPlayer player, List<string> requestedPermissions, Action<bool> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                bool result = MySqlManager.HasPermission(player, requestedPermissions);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
    
         public static void RemovePlayerFromGroupAsync(string groupId, IRocketPlayer player, Action<RocketPermissionsProviderResult> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                RocketPermissionsProviderResult result = MySqlManager.RemovePlayerFromGroup(groupId, player);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
 
         public static void SaveGroupAsync(RocketPermissionsGroup group, Action<RocketPermissionsProviderResult> callback)
         {
-            throw new NotImplementedException();
+            Action async = () =>
+            {
+                RocketPermissionsProviderResult result = MySqlManager.SaveGroup(group);
+
+                Action _callback = () =>
+                {
+                    callback.Invoke(result);
+                };
+
+                ThreadedWorkManager.EnqueueMainThread(_callback);
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(async);
         }
 #endregion
     }
