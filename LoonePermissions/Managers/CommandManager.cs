@@ -17,7 +17,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
     {
         static Dictionary<string, ILooneCommand> commands;
 
-        internal static void Initialize()
+        public static void Initialize()
         {
             commands = new Dictionary<string, ILooneCommand>();
 
@@ -32,7 +32,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             */
         }
 
-        internal static void Excecute(IRocketPlayer caller, string cmd, string[] args)
+        public static void Excecute(IRocketPlayer caller, string cmd, string[] args)
         {
             if (!TryGetCommand(cmd, out ILooneCommand command))
             {
@@ -49,12 +49,12 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             command.Excecute(caller, args);
         }
 
-        internal static bool HasPermission(IRocketPlayer caller, string cmd)
+        public static bool HasPermission(IRocketPlayer caller, string cmd)
         {
             return R.Permissions.HasPermission(caller, new List<string> { "loone." + cmd });
         }
 
-        internal static bool RegisterCommand(string str, ILooneCommand cmd)
+        public static bool RegisterCommand(string str, ILooneCommand cmd)
         {
             if (commands.ContainsKey(str))
             {
@@ -65,11 +65,10 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             return true;
         }
 
-        internal static bool TryGetCommand(string str, out ILooneCommand cmd)
+        public static bool TryGetCommand(string str, out ILooneCommand cmd)
         {
             return commands.TryGetValue(str, out cmd);
         }
-
     }
 }
 
@@ -91,27 +90,28 @@ namespace LoonePermissions
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
-            if (command.Length == 0) {
-                if (!(caller is ConsolePlayer))
-                {
-                    LoonePermissionsPlugin.GameHook.OpenSteamBrowser(caller, "https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
-                }
-                else
+            if (command.Length == 0)
+            {
+                if (caller is ConsolePlayer)
                 {
                     RocketLogger.Log("https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
                 }
-
-                return;
+                else
+                {
+                    LoonePermissionsPlugin.GameHook.OpenSteamBrowser(caller, "https://github.com/ChubbyQuokka/Loone-Permissions/wiki");
+                }
             }
-
-            string[] args = new string[command.Length - 1];
-
-            for (int i = 1; i < command.Length; i++)
+            else
             {
-                args[i - 1] = command[i];
-            }
+                string[] args = new string[command.Length - 1];
 
-            CommandManager.Excecute(caller, command[0], args);
+                for (int i = 1; i < command.Length; i++)
+                {
+                    args[i - 1] = command[i];
+                }
+
+                CommandManager.Excecute(caller, command[0], args);
+            }
         }
     }
 }

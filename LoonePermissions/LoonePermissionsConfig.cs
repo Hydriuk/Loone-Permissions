@@ -7,16 +7,16 @@ namespace ChubbyQuokka.LoonePermissions
     public sealed class LoonePermissionsConfig : IRocketPluginConfiguration
     {
         public string defaultGroup;
-        public string DefaultGroup => LoonePermissionsPlugin.Instance.Configuration.Instance.defaultGroup;
+        public static string DefaultGroup => LoonePermissionsPlugin.Instance.Configuration.Instance.defaultGroup;
 
         public _DatabaseSettings databaseSettings;
-        public _DatabaseSettings DatabaseSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.databaseSettings;
+        public static _DatabaseSettings DatabaseSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.databaseSettings;
 
         public _SyncModeSettings syncModeSettings;
-        public _SyncModeSettings SyncModeSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.syncModeSettings;
+        public static _SyncModeSettings SyncModeSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.syncModeSettings;
 
         public _AdvancedSettings advancedSettings;
-        public _AdvancedSettings AdvancedSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.advancedSettings;
+        public static _AdvancedSettings AdvancedSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.advancedSettings;
 
         public void LoadDefaults()
         {

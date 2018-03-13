@@ -63,6 +63,9 @@
       <HintPath>lib\Rocket.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.XML">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>lib\UnityEngine.dll</HintPath>
       <Private>False</Private>
@@ -72,10 +75,11 @@
     <Compile Include="LoonePermissions\API\Hooks.cs" />
     <Compile Include="LoonePermissions\API\ILooneCommand.cs" />
     <Compile Include="LoonePermissions\Commands\Commands.cs" />
+    <Compile Include="LoonePermissions\LoonePermissionsConfig.cs" />
     <Compile Include="LoonePermissions\Managers\CommandManager.cs" />
-    <Compile Include="LoonePermissions\Managers\MySQLManager.cs" />
-    <Compile Include="LoonePermissions\Managers\ThreadManager.cs" />
-    <Compile Include="LoonePermissions\Providers\MySqlProvider.cs" />
+    <Compile Include="LoonePermissions\Managers\MySqlManager.cs" />
+    <Compile Include="LoonePermissions\Managers\ThreadedWorkManager.cs" />
+    <Compile Include="LoonePermissions\Providers\MySqlPermissionProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="LoonePermissions\LoonePermissions.cs" />
     <Compile Include="LoonePermissions\Managers\PermissionManager.cs" />
