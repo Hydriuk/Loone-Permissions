@@ -7,6 +7,8 @@ using Rocket.Core.Logging;
 
 using MySql.Data.MySqlClient;
 
+using System.Threading;
+
 namespace ChubbyQuokka.LoonePermissions.Managers
 {
     internal static class MySqlManager
@@ -19,6 +21,8 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         static volatile bool isRefreshing;
 
         static LoonePermissionsConfig._DatabaseSettings Settings => LoonePermissionsConfig.DatabaseSettings;
+
+        static Thread RefreshThread;
 
         public static void Initialize()
         {
@@ -84,7 +88,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             {
                 UnthreadedConnection.Open();
 
-                MySqlCommand cmd = UnthreadedConnection.CreateCommand();
+                MySqlCommand cmd = CreateCommand();
                 cmd.CommandText = Queries.CreatePlayerTable;
 
                 cmd.ExecuteNonQuery();
@@ -110,6 +114,16 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
             RefreshConnection?.Dispose();
             RefreshConnection = null;
+        }
+
+        static MySqlCommand CreateCommand()
+        {
+            if (ThreadedWorkManager.IsWorkerThread)
+            {
+                return ThreadedConnection.CreateCommand();
+            }
+
+            return UnthreadedConnection.CreateCommand();
         }
 
         public static RocketPermissionsProviderResult AddGroup(RocketPermissionsGroup group)

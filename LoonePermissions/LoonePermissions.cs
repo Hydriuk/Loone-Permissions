@@ -80,7 +80,9 @@ namespace ChubbyQuokka.LoonePermissions
         protected override void Unload()
         {
             if (RocketPermissionProvider != null)
+            {
                 R.Permissions = RocketPermissionProvider;
+            }
 
             ThreadedWorkManager.Destroy();
             MySqlManager.Destroy();
