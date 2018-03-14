@@ -18,7 +18,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
         static volatile bool RunThread;
 
-        public static bool IsWorkerThread => Thread.CurrentThread.Name == WorkerThread.Name;
+        public static bool IsWorkerThread => Thread.CurrentThread == WorkerThread;
 
         internal static void Initialize()
         {
@@ -34,12 +34,15 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             RunThread = false;
 
-            if (WorkerThread != null && WorkerThread.IsAlive)
+            if (WorkerThread != null)
             {
-                WorkerThread.Join();
-            }
+                if (WorkerThread.IsAlive)
+                {
+                    WorkerThread.Join();
+                }
 
-            WorkerThread = null;
+                WorkerThread = null;
+            }
         }
 
         internal static void Update()
@@ -62,7 +65,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             while (RunThread)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(LoonePermissionsConfig.AdvancedSettings.WorkerThreadSleepTime);
 
                 lock (ThreadedLock)
                 {

@@ -57,7 +57,8 @@ namespace ChubbyQuokka.LoonePermissions
                 }
             }
 
-            RocketLogger.Log("Failed to find any supporting games! Please only use this plugin with supported games.");
+            Log("Failed to find any supporting games! Please only use this plugin with supported games.");
+
             UnloadPlugin();
             return;
 
@@ -65,8 +66,8 @@ namespace ChubbyQuokka.LoonePermissions
 
             hooks.Clear();
 
-            RocketLogger.Log(string.Format("Welcome to Loone Permissions v{0}!", Assembly.GetName().Version), ConsoleColor.Yellow);
-            RocketLogger.Log(string.Format("Plugin is now running in compatibility mode with: {0}.", GameHook.DeterminingAssembly), ConsoleColor.Yellow);
+            Log(string.Format("Welcome to Loone Permissions v{0}!", Assembly.GetName().Version), ConsoleColor.Yellow);
+            Log(string.Format("Plugin is now running in compatibility mode with: {0}.", GameHook.DeterminingAssembly), ConsoleColor.Yellow);
 
             GameHook.Initialize();
 
@@ -75,6 +76,11 @@ namespace ChubbyQuokka.LoonePermissions
             CommandManager.Initialize();
 
             Invoke("LateInit", 1f);
+
+            if (LoonePermissionsConfig.CacheModeSettings.Enabled)
+            {
+                InitializeReshresh();
+            }
         }
 
         protected override void Unload()
@@ -82,10 +88,22 @@ namespace ChubbyQuokka.LoonePermissions
             if (RocketPermissionProvider != null)
             {
                 R.Permissions = RocketPermissionProvider;
+                RocketPermissionProvider = null;
             }
 
             ThreadedWorkManager.Destroy();
             MySqlManager.Destroy();
+            CommandManager.Destroy();
+
+            CancelInvoke();
+
+            GameHook = null;
+            GameAssembly = null;
+            RocketAssembly = null;
+
+            hooks.Clear();
+
+            Instance = null;
         }
 
         void Update()
@@ -98,8 +116,26 @@ namespace ChubbyQuokka.LoonePermissions
             RocketPermissionProvider = R.Permissions;
             Provider = new MySqlPermissionProvider();
             R.Permissions = Provider;
+        }
 
-            RocketLogger.Log(string.Format("Late Initialize was successful!"), ConsoleColor.Yellow);
+        void InitializeReshresh()
+        {
+            MySqlManager.Refresh();
+
+            Log($"LoonePermissions has cached your database, it will refresh its cache every {LoonePermissionsConfig.CacheModeSettings.SyncTime} milliseconds!", ConsoleColor.Yellow);
+
+            float refreshTime = LoonePermissionsConfig.CacheModeSettings.SyncTime / 1000f;
+            InvokeRepeating("InitializeRefresh", refreshTime, refreshTime);
+        }
+
+        void Refresh()
+        {
+            Action refresh = () =>
+            {
+                MySqlManager.Refresh();
+            };
+
+            ThreadedWorkManager.EnqueueWorkerThread(refresh);
         }
 
         public override TranslationList DefaultTranslations =>  new TranslationList
@@ -129,13 +165,59 @@ namespace ChubbyQuokka.LoonePermissions
 
         internal static void Say(IRocketPlayer caller, string message, Color color, params object[] objs)
         {
-            if (caller is ConsolePlayer)
+            Action say = () =>
             {
-                RocketLogger.Log(Instance.Translate(message, objs), ConsoleColor.Yellow);
+                if (caller is ConsolePlayer)
+                {
+                    RocketLogger.Log(Instance.Translate(message, objs), ConsoleColor.Yellow);
+                }
+                else
+                {
+                    GameHook.Say(caller, Instance.Translate(message, objs), color);
+                }
+            };
+
+            if (ThreadedWorkManager.IsWorkerThread)
+            {
+                ThreadedWorkManager.EnqueueMainThread(say);
             }
             else
             {
-                GameHook.Say(caller, Instance.Translate(message, objs), color);
+                say.Invoke();
+            }
+        }
+
+        internal static void Log(string message, ConsoleColor color = ConsoleColor.White)
+        {
+            Action log = () =>
+            {
+                RocketLogger.Log(message, color);
+            };
+
+            if (ThreadedWorkManager.IsWorkerThread)
+            {
+                ThreadedWorkManager.EnqueueMainThread(log);
+            }
+            else
+            {
+                log.Invoke();
+            }
+        }
+
+        internal static void LogException(Exception e)
+        {
+            Action log = () =>
+            {
+                RocketLogger.Log(e);
+            };
+
+            if (ThreadedWorkManager.IsWorkerThread)
+            {
+                ThreadedWorkManager.EnqueueMainThread(log);
+            }
+            else
+            {
+                log.Invoke();
             }
         }
 

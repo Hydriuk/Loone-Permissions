@@ -15,7 +15,10 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         }
 
         #region Blocking Calls
-        public static RocketPermissionsProviderResult AddGroupBlocking(RocketPermissionsGroup group) => MySqlManager.AddGroup(group);
+        public static RocketPermissionsProviderResult AddGroupBlocking(RocketPermissionsGroup group)
+        {
+            return MySqlManager.AddGroup(group);
+        }
 
         public static RocketPermissionsProviderResult AddPlayerToGroupBlocking(string groupId, IRocketPlayer player) => MySqlManager.AddPlayerToGroup(groupId, player);
 
@@ -42,7 +45,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                RocketPermissionsProviderResult result = MySqlManager.AddGroup(group);
+                RocketPermissionsProviderResult result = AddGroupBlocking(group);
 
                 Action _callback = () =>
                 {
@@ -59,7 +62,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                RocketPermissionsProviderResult result = MySqlManager.AddPlayerToGroup(groupId, player);
+                RocketPermissionsProviderResult result = AddPlayerToGroupBlocking(groupId, player);
 
                 Action _callback = () =>
                 {
@@ -76,7 +79,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                RocketPermissionsProviderResult result = MySqlManager.DeleteGroup(groupId);
+                RocketPermissionsProviderResult result = DeleteGroupBlocking(groupId);
 
                 Action _callback = () =>
                 {
@@ -93,7 +96,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                RocketPermissionsGroup result = MySqlManager.GetGroup(groupId);
+                RocketPermissionsGroup result = GetGroupBlocking(groupId);
 
                 Action _callback = () =>
                 {
@@ -110,7 +113,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                List<RocketPermissionsGroup> result = MySqlManager.GetGroups(player, includeParentGroups);
+                List<RocketPermissionsGroup> result = GetGroupsBlocking(player, includeParentGroups);
 
                 Action _callback = () =>
                 {
@@ -127,7 +130,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                List<Permission> result = MySqlManager.GetPermissions(player);
+                List<Permission> result = GetPermissionsBlocking(player);
 
                 Action _callback = () =>
                 {
@@ -144,7 +147,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                List<Permission> result = MySqlManager.GetPermissions(player, requestedPermissions);
+                List<Permission> result = GetPermissionsBlocking(player, requestedPermissions);
 
                 Action _callback = () =>
                 {
@@ -161,7 +164,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                bool result = MySqlManager.HasPermission(player, requestedPermissions);
+                bool result = HasPermissionBlocking(player, requestedPermissions);
 
                 Action _callback = () =>
                 {
@@ -178,7 +181,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                RocketPermissionsProviderResult result = MySqlManager.RemovePlayerFromGroup(groupId, player);
+                RocketPermissionsProviderResult result = RemovePlayerFromGroupBlocking(groupId, player);
 
                 Action _callback = () =>
                 {
@@ -195,7 +198,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             Action async = () =>
             {
-                RocketPermissionsProviderResult result = MySqlManager.SaveGroup(group);
+                RocketPermissionsProviderResult result = SaveGroupBlocking(group);
 
                 Action _callback = () =>
                 {

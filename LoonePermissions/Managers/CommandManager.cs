@@ -32,6 +32,15 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             */
         }
 
+        public static void Destroy()
+        {
+            if (commands != null)
+            {
+                commands.Clear();
+                commands = null;
+            }
+        }
+
         public static void Excecute(IRocketPlayer caller, string cmd, string[] args)
         {
             if (!TryGetCommand(cmd, out ILooneCommand command))

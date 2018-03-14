@@ -12,8 +12,8 @@ namespace ChubbyQuokka.LoonePermissions
         public _DatabaseSettings databaseSettings;
         public static _DatabaseSettings DatabaseSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.databaseSettings;
 
-        public _SyncModeSettings syncModeSettings;
-        public static _SyncModeSettings SyncModeSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.syncModeSettings;
+        public _CacheModeSettings cacheModeSettings;
+        public static _CacheModeSettings CacheModeSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.cacheModeSettings;
 
         public _AdvancedSettings advancedSettings;
         public static _AdvancedSettings AdvancedSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.advancedSettings;
@@ -34,7 +34,7 @@ namespace ChubbyQuokka.LoonePermissions
                 PermissionsTableName = "loone_permissions"
             };
 
-            syncModeSettings = new _SyncModeSettings
+            cacheModeSettings = new _CacheModeSettings
             {
                 Enabled = false,
                 SyncTime = 10000
@@ -42,7 +42,7 @@ namespace ChubbyQuokka.LoonePermissions
 
             advancedSettings = new _AdvancedSettings
             {
-                UseAsyncCommands = false,
+                UseAsyncCommands = true,
                 WorkerThreadSleepTime = 100
             };
         }
@@ -62,7 +62,7 @@ namespace ChubbyQuokka.LoonePermissions
         }
 
         [XmlRoot(ElementName = "SyncModeSettings")]
-        public struct _SyncModeSettings
+        public struct _CacheModeSettings
         {
             public bool Enabled;
             public uint SyncTime;

@@ -3,11 +3,8 @@ using System.Collections.Generic;
 
 using Rocket.API;
 using Rocket.API.Serialisation;
-using Rocket.Core.Logging;
 
 using MySql.Data.MySqlClient;
-
-using System.Threading;
 
 namespace ChubbyQuokka.LoonePermissions.Managers
 {
@@ -15,44 +12,35 @@ namespace ChubbyQuokka.LoonePermissions.Managers
     {
         static MySqlConnection UnthreadedConnection;
         static MySqlConnection ThreadedConnection;
-        static MySqlConnection RefreshConnection;
-
-        public static bool IsRefreshing => isRefreshing;
-        static volatile bool isRefreshing;
-
+        
         static LoonePermissionsConfig._DatabaseSettings Settings => LoonePermissionsConfig.DatabaseSettings;
 
-        static Thread RefreshThread;
+        static RocketPermissions internalPerms;
 
         public static void Initialize()
         {
             UnthreadedConnection = new MySqlConnection(Queries.Connection);
             ThreadedConnection = new MySqlConnection(Queries.Connection);
 
-            if (LoonePermissionsConfig.SyncModeSettings.Enabled)
-            {
-                RefreshConnection = new MySqlConnection(Queries.Connection);
-            }
-
-            MySqlCommand cmd1 = UnthreadedConnection.CreateCommand();
-            MySqlCommand cmd2 = UnthreadedConnection.CreateCommand();
-            MySqlCommand cmd3 = UnthreadedConnection.CreateCommand();
+            MySqlCommand cmd1 = CreateCommand();
+            MySqlCommand cmd2 = CreateCommand();
+            MySqlCommand cmd3 = CreateCommand();
 
             cmd1.CommandText = Queries.ShowTablesLikeGroupTable;
             cmd2.CommandText = Queries.ShowTablesLikePermissionTable;
             cmd3.CommandText = Queries.ShowTablesLikePlayerTable;
 
-            UnthreadedConnection.Open();
+            OpenConnection();
 
             object obj1 = cmd1.ExecuteScalar();
             object obj2 = cmd2.ExecuteScalar();
             object obj3 = cmd3.ExecuteScalar();
 
-            UnthreadedConnection.Close();
+            CloseConnection();
 
             if (obj1 == null)
             {
-                UnthreadedConnection.Open();
+                OpenConnection();
 
                 MySqlCommand cmd = UnthreadedConnection.CreateCommand();
                 cmd.CommandText = Queries.CreateGroupTable;
@@ -61,23 +49,23 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                 UnthreadedConnection.Close();
 
-                Logger.Log($"Generating table: {Settings.GroupsTableName}", ConsoleColor.Yellow);
+                LoonePermissionsPlugin.Log($"Generating table: {Settings.GroupsTableName}", ConsoleColor.Yellow);
 
                 //CreateGroup("default");
             }
 
             if (obj2 == null)
             {
-                UnthreadedConnection.Open();
+                OpenConnection();
 
                 MySqlCommand cmd = UnthreadedConnection.CreateCommand();
                 cmd.CommandText = Queries.CreatePermissionTable;
 
                 cmd.ExecuteNonQuery();
 
-                UnthreadedConnection.Close();
+                CloseConnection();
 
-                Logger.Log($"Generating table: {Settings.PermissionsTableName}", ConsoleColor.Yellow);
+                LoonePermissionsPlugin.Log($"Generating table: {Settings.PermissionsTableName}", ConsoleColor.Yellow);
 
                 //AddPermission("default", "p", 0);
                 //AddPermission("default", "rocket", 0);
@@ -86,34 +74,44 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
             if (obj3 == null)
             {
-                UnthreadedConnection.Open();
+                OpenConnection();
 
                 MySqlCommand cmd = CreateCommand();
                 cmd.CommandText = Queries.CreatePlayerTable;
 
                 cmd.ExecuteNonQuery();
 
-                UnthreadedConnection.Close();
+                CloseConnection();
 
-                Logger.Log($"Generating table: {Settings.PlayerTableName}", ConsoleColor.Yellow);
+                LoonePermissionsPlugin.Log($"Generating table: {Settings.PlayerTableName}", ConsoleColor.Yellow);
             }
 
             if (obj1 == null && obj2 == null && obj3 == null)
             {
-                //Migrate();
+                Migrate();
             }
+
+
         }
 
         public static void Destroy()
         {
-            UnthreadedConnection?.Dispose();
-            UnthreadedConnection = null;
+            if (UnthreadedConnection != null)
+            {
+                UnthreadedConnection.Dispose();
+                UnthreadedConnection = null;
+            }
 
-            ThreadedConnection?.Dispose();
-            ThreadedConnection = null;
+            if (ThreadedConnection != null)
+            {
+                ThreadedConnection.Dispose();
+                ThreadedConnection = null;
+            }
+        }
 
-            RefreshConnection?.Dispose();
-            RefreshConnection = null;
+        internal static void Refresh()
+        {
+            
         }
 
         static MySqlCommand CreateCommand()
@@ -124,6 +122,26 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             }
 
             return UnthreadedConnection.CreateCommand();
+        }
+
+        static void OpenConnection()
+        {
+            if (ThreadedWorkManager.IsWorkerThread)
+            {
+                ThreadedConnection.Open();
+            }
+
+            UnthreadedConnection.Open();
+        }
+
+        static void CloseConnection()
+        {
+            if (ThreadedWorkManager.IsWorkerThread)
+            {
+                ThreadedConnection.Close();
+            }
+
+            UnthreadedConnection.Close();
         }
 
         public static RocketPermissionsProviderResult AddGroup(RocketPermissionsGroup group)
@@ -176,11 +194,16 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             throw new NotImplementedException();
         }
 
+        public static bool Migrate()
+        {
+            throw new NotImplementedException();
+        }
+
         static class Queries
         {
             public static string Connection => $"SERVER={Settings.Address};DATABASE={Settings.Database};UID={Settings.Username};PASSWORD={Settings.Password};PORT={Settings.Port};";
 
-            public static string CreateGroupTable => $"CREATE TABLE `{Settings.GroupsTableName}` (`groupid` VARCHAR(64) NOT NULL UNIQUE, `groupname` VARCHAR(64) NOT NULL, `parent` VARCHAR(64), `prefix` VARCHAR(64), `suffix` VARCHAR(64), `color` VARCHAR(7) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
+            public static string CreateGroupTable => $"CREATE TABLE `{Settings.GroupsTableName}` (`groupid` VARCHAR(64) NOT NULL UNIQUE, `groupname` VARCHAR(64) NOT NULL, `parent` VARCHAR(64), `prefix` VARCHAR(64), `suffix` VARCHAR(64), `color` VARCHAR(16) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
             public static string CreatePermissionTable => $"CREATE TABLE `{Settings.PermissionsTableName}` (`groupid` VARCHAR(64) NOT NULL, `permission` VARCHAR(64) NOT NULL, `cooldown` INTEGER DEFAULT '0')";
             public static string CreatePlayerTable => $"CREATE TABLE `{Settings.PlayerTableName}` (`csteamid` BIGINT NOT NULL, `groupid` VARCHAR(64) NOT NULL)";
 
@@ -188,7 +211,9 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             public static string ShowTablesLikePermissionTable => $"SHOW TABLES LIKE '{Settings.PermissionsTableName}'";
             public static string ShowTablesLikePlayerTable => $"SHOW TABLES LIKE '{Settings.PlayerTableName}'";
 
-
+            public static string SelectAllGroups => $"SELECT * FROM `{Settings.GroupsTableName}`";
+            public static string SelectAllPermissions => $"SELECT * FROM `{Settings.PermissionsTableName}`";
+            public static string SelectAllPlayers => $"SELECT * FROM `{Settings.PlayerTableName}`";
         }
     }
 }
