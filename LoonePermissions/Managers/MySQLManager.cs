@@ -240,15 +240,11 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                         return sb.ToString();
                     }
-                    else
-                    {
-                        throw new ArgumentException("The array must contain at least one non-null member!", "ids");
-                    }
+
+                    throw new ArgumentException("The array must contain at least one non-null member!", nameof(ids));
                 }
-                else
-                {
-                    throw new ArgumentNullException("ids");
-                }
+
+                throw new ArgumentNullException(nameof(ids));
             }
 
             public static string InsertGroupsIntoGroups(RocketPermissionsGroup[] groups)
@@ -277,15 +273,11 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                         return sb.ToString();
                     }
-                    else
-                    {
-                        throw new ArgumentException("The array must contain at least one non-null member!", "groups");
-                    }
+
+                    throw new ArgumentException("The array must contain at least one non-null member!", nameof(groups));
                 }
-                else
-                {
-                    throw new ArgumentNullException("groups");
-                }
+
+                throw new ArgumentNullException(nameof(groups));
             }
         }
     }
