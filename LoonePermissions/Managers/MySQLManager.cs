@@ -186,6 +186,8 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
         static class Queries
         {
+            public const string ValueSeperator = "', '";
+
             public static string Connection => $"SERVER={Settings.Address};DATABASE={Settings.Database};UID={Settings.Username};PASSWORD={Settings.Password};PORT={Settings.Port};";
 
             public static string CreateGroupTable => $"CREATE TABLE `{Settings.GroupsTableName}` (`groupid` VARCHAR(64) NOT NULL UNIQUE, `groupname` VARCHAR(64) NOT NULL, `parent` VARCHAR(64), `prefix` VARCHAR(64), `suffix` VARCHAR(64), `color` VARCHAR(16) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
@@ -210,11 +212,19 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
             public static string SelectGroupIdsByPlayer(ulong steamId) => $"SELECT * FROM `{Settings.PlayerTableName}` WHERE `csteamid` = '{steamId}'";
             public static string SelectPermissionsByGroupId(string groupId) => $"SELECT * FROM `{Settings.PermissionsTableName} WHERE `groupid` = '{groupId}'";
-            public static string SelectGroupById(string groupId) => $"SELECT 1 FROM `{Settings.GroupsTableName}` WHERE `gropuid` = '{groupId}'";
+            public static string SelectGroupByGroupId(string groupId) => $"SELECT 1 FROM `{Settings.GroupsTableName}` WHERE `groupid` = '{groupId}'";
 
-            public static string InsertPlayerToGroup(ulong steamId, string groupId) => $"INSERT INTO `{Settings.PlayerTableName}` VALUES ('{steamId}', '{groupId}')";
+            public static string InsertPlayerToPlayers(ulong steamId, string groupId) => $"INSERT INTO `{Settings.PlayerTableName}` VALUES ('{steamId}', '{groupId}')";
 
-            public static string SelectGroupsByIds(string[] ids)
+            public static string GroupExists(string groupId) => $"SELECT EXISTS (SELECT * FROM `{Settings.GroupsTableName}` WHERE `groupid` = '{groupId}')";
+            public static string PermissionExists(string permission, string groupId) => $"SELECT EXISTS (SELECT * FROM `{Settings.PermissionsTableName}` WHERE `groupid` = '{groupId}' AND `permission` = '{permission}')";
+            public static string PlayerExists(ulong steamId, string groupId) => $"SELECT EXISTS (SELECT * FROM `{Settings.PlayerTableName}` WHERE `groupid` = '{groupId}' AND `csteamid` = '{steamId}')";
+
+            public static string UpdateGroup(string groupId, string param, string value) => $"UPDATE `{Settings.GroupsTableName}` SET `{param}` = '{value}' WHERE `groupid` = '{groupId}'";
+            public static string UpdatePermission(string groupId, string permission, string newCooldown) => $"UPDATE `{Settings.PermissionsTableName}` SET `cooldown` = '{newCooldown}' WHERE `groupid` = '{groupId}' AND `permission` = '{permission}'";
+
+            #region Select Specific Groups
+            public static string SelectGroupsByGroupIds(string[] ids)
             {
                 if (ids != null)
                 {
@@ -224,16 +234,20 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                     {
                         StringBuilder sb = new StringBuilder();
 
-                        sb.Append($"SELECT * FROM {Settings.GroupsTableName} WHERE");
+                        sb.Append($"SELECT * FROM ");
+                        sb.Append(Settings.GroupsTableName);
+                        sb.Append(" WHERE");
 
                         for (int i = 0; i < ids.Length; i++)
                         {
-                            sb.Append($" `groupid` = '{ids[i]}'");
-
-                            if (i - 1 < ids.Length)
+                            if (i != 0)
                             {
                                 sb.Append(" OR");
                             }
+
+                            sb.Append(" `groupid` = '");
+                            sb.Append(ids[i]);
+                            sb.Append("'");
                         }
 
                         sb.Append(" ORDER BY `priority` ASC");
@@ -247,6 +261,78 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                 throw new ArgumentNullException(nameof(ids));
             }
 
+            public static string SelectPlayersByGroupIds(string[] ids)
+            {
+                if (ids != null)
+                {
+                    ids = ids.Where(x => x != null).ToArray();
+
+                    if (ids.Length != 0)
+                    {
+                        StringBuilder sb = new StringBuilder();
+
+                        sb.Append($"SELECT * FROM ");
+                        sb.Append(Settings.PlayerTableName);
+                        sb.Append(" WHERE");
+
+                        for (int i = 0; i < ids.Length; i++)
+                        {
+                            if (i != 0)
+                            {
+                                sb.Append(" OR");
+                            }
+
+                            sb.Append(" `groupid` = '");
+                            sb.Append(ids[i]);
+                            sb.Append("'");
+                        }
+
+                        return sb.ToString();
+                    }
+
+                    throw new ArgumentException("The array must contain at least one non-null member!", nameof(ids));
+                }
+
+                throw new ArgumentNullException(nameof(ids));
+            }
+
+            public static string SelectPermissionsByGroupIds(string[] ids)
+            {
+                if (ids != null)
+                {
+                    ids = ids.Where(x => x != null).ToArray();
+
+                    if (ids.Length != 0)
+                    {
+                        StringBuilder sb = new StringBuilder();
+
+                        sb.Append($"SELECT * FROM ");
+                        sb.Append(Settings.PermissionsTableName);
+                        sb.Append(" WHERE");
+
+                        for (int i = 0; i < ids.Length; i++)
+                        {
+                            if (i != 0)
+                            {
+                                sb.Append(" OR");
+                            }
+
+                            sb.Append(" `groupid` = '");
+                            sb.Append(ids[i]);
+                            sb.Append("'");
+                        }
+
+                        return sb.ToString();
+                    }
+
+                    throw new ArgumentException("The array must contain at least one non-null member!", nameof(ids));
+                }
+
+                throw new ArgumentNullException(nameof(ids));
+            }
+            #endregion
+
+            #region Migration
             public static string InsertGroupsIntoGroups(RocketPermissionsGroup[] groups)
             {
                 if (groups != null)
@@ -257,7 +343,9 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                     {
                         StringBuilder sb = new StringBuilder();
 
-                        sb.Append($"INSERT INTO `{Settings.GroupsTableName}` VALUES");
+                        sb.Append($"INSERT INTO `");
+                        sb.Append(Settings.GroupsTableName);
+                        sb.Append("` VALUES");
 
                         for (int i = 0; i < groups.Length; i++)
                         {
@@ -268,7 +356,22 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                                 sb.Append(",");
                             }
 
-                            sb.Append($" ('{g.Id}', '{g.DisplayName}', '{g.ParentGroup}', '{g.Prefix}', '{g.Suffix}', '{g.Color}', '{g.Priority}')");
+                            sb.Append(" ('");
+                            sb.Append(g.Id);
+                            sb.Append(ValueSeperator);
+                            sb.Append(g.DisplayName);
+                            sb.Append(ValueSeperator);
+                            sb.Append(g.ParentGroup);
+                            sb.Append(ValueSeperator);
+                            sb.Append(g.Prefix);
+                            sb.Append(ValueSeperator);
+                            sb.Append(g.Suffix);
+                            sb.Append(ValueSeperator);
+                            sb.Append(g.Color);
+                            sb.Append(ValueSeperator);
+                            sb.Append(g.Priority);
+                            sb.Append("')");
+
                         }
 
                         return sb.ToString();
@@ -279,6 +382,118 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                 throw new ArgumentNullException(nameof(groups));
             }
+
+            public static string InsertGroupsIntoPlayers(RocketPermissionsGroup[] groups)
+            {
+                if (groups != null)
+                {
+                    groups = groups.Where(x => x != null).ToArray();
+
+                    if (groups.Length != 0)
+                    {
+                        StringBuilder sb = new StringBuilder();
+
+                        sb.Append($"INSERT INTO `");
+                        sb.Append(Settings.PlayerTableName);
+                        sb.Append("` VALUES");
+
+                        //Thank you .NET 3.5 for not having Tuples.
+                        List<string> Players = new List<string>();
+                        List<string> Groups = new List<string>();
+
+                        for (int i = 0; i < groups.Length; i++)
+                        {
+                            if (groups[i].Members != null && groups[i].Members.Count != 0)
+                            {
+                                groups[i].Members = groups[i].Members.Where(x => x != null).ToList();
+
+                                for (int ii = 0; i < groups[i].Members.Count; i++)
+                                {
+                                    Players.Add(groups[i].Members[ii]);
+                                    Groups.Add(groups[i].Id);
+                                }
+                            }
+                        }
+
+                        for (int i = 0; i < Players.Count; i++)
+                        {
+                            if (i != 0)
+                            {
+                                sb.Append(",");
+                            }
+
+                            sb.Append(" ('");
+                            sb.Append(Players[i]);
+                            sb.Append(ValueSeperator);
+                            sb.Append(Groups[i]);
+                            sb.Append("')");
+                        }
+
+                        return sb.ToString();
+                    }
+
+                    throw new ArgumentException("The array must contain at least one non-null member!", nameof(groups));
+                }
+
+                throw new ArgumentNullException(nameof(groups));
+            }
+
+            public static string InsertGroupsIntoPermissions(RocketPermissionsGroup[] groups)
+            {
+                if (groups != null)
+                {
+                    groups = groups.Where(x => x != null).ToArray();
+
+                    if (groups.Length != 0)
+                    {
+                        StringBuilder sb = new StringBuilder();
+
+                        sb.Append($"INSERT INTO `");
+                        sb.Append(Settings.PermissionsTableName);
+                        sb.Append("` VALUES");
+
+                        List<Permission> Permissions = new List<Permission>();
+                        List<string> Groups = new List<string>();
+
+                        for (int i = 0; i < groups.Length; i++)
+                        {
+                            if (groups[i].Permissions != null && groups[i].Permissions.Count != 0)
+                            {
+                                groups[i].Permissions = groups[i].Permissions.Where(x => x != null).ToList();
+
+                                for (int ii = 0; i < groups[i].Permissions.Count; i++)
+                                {
+                                    Permissions.Add(groups[i].Permissions[ii]);
+                                    Groups.Add(groups[i].Id);
+                                }
+                            }
+                        }
+
+                        for (int i = 0; i < Permissions.Count; i++)
+                        {
+                            if (i != 0)
+                            {
+                                sb.Append(",");
+                            }
+
+                            sb.Append(" ('");
+                            sb.Append(Groups[i]);
+                            sb.Append(ValueSeperator);
+                            sb.Append(Permissions[i].Name);
+                            sb.Append(ValueSeperator);
+                            sb.Append(Permissions[i].Cooldown);
+                            sb.Append("')");
+                        }
+
+                        return sb.ToString();
+                    }
+
+                    throw new ArgumentException("The array must contain at least one non-null member!", nameof(groups));
+                }
+
+                throw new ArgumentNullException(nameof(groups));
+            }
+            #endregion
         }
     }
 }
