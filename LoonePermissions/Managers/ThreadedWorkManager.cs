@@ -43,6 +43,12 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                 WorkerThread = null;
             }
+
+            ThreadedBuffer.Clear();
+            ThreadedQueue.Clear();
+
+            UnthreadedBuffer.Clear();
+            UnthreadedQueue.Clear();
         }
 
         internal static void Update()

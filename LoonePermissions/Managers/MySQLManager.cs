@@ -5,6 +5,8 @@ using Rocket.API;
 using Rocket.API.Serialisation;
 
 using MySql.Data.MySqlClient;
+using System.Text;
+using System.Linq;
 
 namespace ChubbyQuokka.LoonePermissions.Managers
 {
@@ -12,7 +14,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
     {
         static MySqlConnection UnthreadedConnection;
         static MySqlConnection ThreadedConnection;
-        
+
         static LoonePermissionsConfig._DatabaseSettings Settings => LoonePermissionsConfig.DatabaseSettings;
 
         static RocketPermissions internalPerms;
@@ -90,8 +92,6 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             {
                 Migrate();
             }
-
-
         }
 
         public static void Destroy()
@@ -111,7 +111,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
         internal static void Refresh()
         {
-            
+
         }
 
         static MySqlCommand CreateCommand()
@@ -169,21 +169,6 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             throw new NotImplementedException();
         }
 
-        public static List<Permission> GetPermissions(IRocketPlayer player)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static List<Permission> GetPermissions(IRocketPlayer player, List<string> requestedPermissions)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static bool HasPermission(IRocketPlayer player, List<string> requestedPermissions)
-        {
-            throw new NotImplementedException();
-        }
-
         public static RocketPermissionsProviderResult RemovePlayerFromGroup(string groupId, IRocketPlayer player)
         {
             throw new NotImplementedException();
@@ -211,9 +196,97 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             public static string ShowTablesLikePermissionTable => $"SHOW TABLES LIKE '{Settings.PermissionsTableName}'";
             public static string ShowTablesLikePlayerTable => $"SHOW TABLES LIKE '{Settings.PlayerTableName}'";
 
-            public static string SelectAllGroups => $"SELECT * FROM `{Settings.GroupsTableName}`";
+            public static string SelectAllGroups => $"SELECT * FROM `{Settings.GroupsTableName}` ORDER BY `priority` ASC";
             public static string SelectAllPermissions => $"SELECT * FROM `{Settings.PermissionsTableName}`";
             public static string SelectAllPlayers => $"SELECT * FROM `{Settings.PlayerTableName}`";
+
+            public static string DeleteAllFromGroups => $"DELETE FROM `{Settings.GroupsTableName}`";
+            public static string DeleteAllFromPermissions => $"DELETE FROM `{Settings.PermissionsTableName}`";
+            public static string DeleteAllFromPlayers => $"DELETE FROM `{Settings.PlayerTableName}`";
+
+            public static string DeleteGroupFromGroup(string groupId) => $"DELETE FROM `{Settings.GroupsTableName}` WHERE `groupid` = '{groupId}'";
+            public static string DeleteGroupFromPermissions(string groupId) => $"DELETE FROM `{Settings.PermissionsTableName}` WHERE `groupid` = '{groupId}'";
+            public static string DeleteGroupFromPlayers(string groupId) => $"DELETE FROM `{Settings.PlayerTableName}` WHERE `groupid` = '{groupId}'";
+
+            public static string SelectGroupIdsByPlayer(ulong steamId) => $"SELECT * FROM `{Settings.PlayerTableName}` WHERE `csteamid` = '{steamId}'";
+            public static string SelectPermissionsByGroupId(string groupId) => $"SELECT * FROM `{Settings.PermissionsTableName} WHERE `groupid` = '{groupId}'";
+            public static string SelectGroupById(string groupId) => $"SELECT 1 FROM `{Settings.GroupsTableName}` WHERE `gropuid` = '{groupId}'";
+
+            public static string InsertPlayerToGroup(ulong steamId, string groupId) => $"INSERT INTO `{Settings.PlayerTableName}` VALUES ('{steamId}', '{groupId}')";
+
+            public static string SelectGroupsByIds(string[] ids)
+            {
+                if (ids != null)
+                {
+                    ids = ids.Where(x => x != null).ToArray();
+
+                    if (ids.Length != 0)
+                    {
+                        StringBuilder sb = new StringBuilder();
+
+                        sb.Append($"SELECT * FROM {Settings.GroupsTableName} WHERE");
+
+                        for (int i = 0; i < ids.Length; i++)
+                        {
+                            sb.Append($" `groupid` = '{ids[i]}'");
+
+                            if (i - 1 < ids.Length)
+                            {
+                                sb.Append(" OR");
+                            }
+                        }
+
+                        sb.Append(" ORDER BY `priority` ASC");
+
+                        return sb.ToString();
+                    }
+                    else
+                    {
+                        throw new ArgumentException("The array must contain at least one non-null member!", "ids");
+                    }
+                }
+                else
+                {
+                    throw new ArgumentNullException("ids");
+                }
+            }
+
+            public static string InsertGroupsIntoGroups(RocketPermissionsGroup[] groups)
+            {
+                if (groups != null)
+                {
+                    groups = groups.Where(x => x != null).ToArray();
+
+                    if (groups.Length != 0)
+                    {
+                        StringBuilder sb = new StringBuilder();
+
+                        sb.Append($"INSERT INTO `{Settings.GroupsTableName}` VALUES");
+
+                        for (int i = 0; i < groups.Length; i++)
+                        {
+                            RocketPermissionsGroup g = groups[i];
+
+                            if (i != 0)
+                            {
+                                sb.Append(",");
+                            }
+
+                            sb.Append($" ('{g.Id}', '{g.DisplayName}', '{g.ParentGroup}', '{g.Prefix}', '{g.Suffix}', '{g.Color}', '{g.Priority}')");
+                        }
+
+                        return sb.ToString();
+                    }
+                    else
+                    {
+                        throw new ArgumentException("The array must contain at least one non-null member!", "groups");
+                    }
+                }
+                else
+                {
+                    throw new ArgumentNullException("groups");
+                }
+            }
         }
     }
 }

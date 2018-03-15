@@ -4,6 +4,7 @@ using Rocket.API;
 
 namespace ChubbyQuokka.LoonePermissions
 {
+    [XmlRoot(ElementName = "LoonePermissions")]
     public sealed class LoonePermissionsConfig : IRocketPluginConfiguration
     {
         public string defaultGroup;

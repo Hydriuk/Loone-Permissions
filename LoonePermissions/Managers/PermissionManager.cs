@@ -15,28 +15,55 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         }
 
         #region Blocking Calls
-        public static RocketPermissionsProviderResult AddGroupBlocking(RocketPermissionsGroup group)
-        {
-            return MySqlManager.AddGroup(group);
-        }
-
-        public static RocketPermissionsProviderResult AddPlayerToGroupBlocking(string groupId, IRocketPlayer player) => MySqlManager.AddPlayerToGroup(groupId, player);
+        public static RocketPermissionsProviderResult AddGroupBlocking(RocketPermissionsGroup group) => MySqlManager.AddGroup(group);
 
         public static RocketPermissionsProviderResult DeleteGroupBlocking(string groupId) => MySqlManager.DeleteGroup(groupId);
 
-        public static RocketPermissionsGroup GetGroupBlocking(string groupId) => MySqlManager.GetGroup(groupId);
+        public static RocketPermissionsProviderResult SaveGroupBlocking(RocketPermissionsGroup group) => MySqlManager.SaveGroup(group);
 
-        public static List<RocketPermissionsGroup> GetGroupsBlocking(IRocketPlayer player, bool includeParentGroups) => MySqlManager.GetGroups(player, includeParentGroups);
-
-        public static List<Permission> GetPermissionsBlocking(IRocketPlayer player) => MySqlManager.GetPermissions(player);
-
-        public static List<Permission> GetPermissionsBlocking(IRocketPlayer player, List<string> requestedPermissions) => MySqlManager.GetPermissions(player, requestedPermissions);
-
-        public static bool HasPermissionBlocking(IRocketPlayer player, List<string> requestedPermissions) => MySqlManager.HasPermission(player, requestedPermissions);
+        public static RocketPermissionsProviderResult AddPlayerToGroupBlocking(string groupId, IRocketPlayer player) => MySqlManager.AddPlayerToGroup(groupId, player);
 
         public static RocketPermissionsProviderResult RemovePlayerFromGroupBlocking(string groupId, IRocketPlayer player) => MySqlManager.RemovePlayerFromGroup(groupId, player);
 
-        public static RocketPermissionsProviderResult SaveGroupBlocking(RocketPermissionsGroup group) => MySqlManager.SaveGroup(group);
+        public static RocketPermissionsGroup GetGroupBlocking(string groupId) {
+            RocketPermissionsGroup g = MySqlManager.GetGroup(groupId);
+
+            //Processing
+
+            return g;
+        }
+
+        public static List<RocketPermissionsGroup> GetGroupsBlocking(IRocketPlayer player, bool includeParentGroups)
+        {
+            List<RocketPermissionsGroup> groups = MySqlManager.GetGroups(player, includeParentGroups);
+
+            //Processing
+
+            return groups;
+        }
+
+        public static List<Permission> GetPermissionsBlocking(IRocketPlayer player)
+        {
+            List<Permission> perms = null;
+
+            //Processing
+
+            return perms;
+        }
+
+        public static List<Permission> GetPermissionsBlocking(IRocketPlayer player, List<string> requestedPermissions)
+        {
+            List<Permission> perms = null;
+
+            //Processing
+
+            return perms;
+        }
+
+        public static bool HasPermissionBlocking(IRocketPlayer player, List<string> requestedPermissions)
+        {
+            return false;
+        }
 
         #endregion
         #region Async Calls

@@ -57,13 +57,14 @@ namespace ChubbyQuokka.LoonePermissions
                 }
             }
 
-            Log("Failed to find any supporting games! Please only use this plugin with supported games.");
+            Log("Failed to find any supported games! Please only use this plugin with supported games.");
 
             UnloadPlugin();
             return;
 
             FoundRocketAssembly:
 
+            //Releasing the extra hooks.
             hooks.Clear();
 
             Log(string.Format("Welcome to Loone Permissions v{0}!", Assembly.GetName().Version), ConsoleColor.Yellow);
@@ -125,7 +126,7 @@ namespace ChubbyQuokka.LoonePermissions
             Log($"LoonePermissions has cached your database, it will refresh its cache every {LoonePermissionsConfig.CacheModeSettings.SyncTime} milliseconds!", ConsoleColor.Yellow);
 
             float refreshTime = LoonePermissionsConfig.CacheModeSettings.SyncTime / 1000f;
-            InvokeRepeating("InitializeRefresh", refreshTime, refreshTime);
+            InvokeRepeating("Refresh", refreshTime, refreshTime);
         }
 
         void Refresh()
@@ -146,7 +147,7 @@ namespace ChubbyQuokka.LoonePermissions
             { TranslationConstants.INVALID_COLOR, "You specified an invalid color!" },
             { TranslationConstants.INVALID_NUM, "Please specify an actual number!" },
             { TranslationConstants.GROUP_CREATE, "You have created the group: {0}!" },
-            { TranslationConstants.GROUP_DELETE, "You have deleted the group: {0}, all players in this group were moved to {1}!" },
+            { TranslationConstants.GROUP_DELETE, "You have deleted the group: {0}!" },
             { TranslationConstants.GROUP_DELETE_DEFAULT, "You can't delete the default group!" },
             { TranslationConstants.GROUP_DEFAULT, "You have changed the default group to {0}!" },
             { TranslationConstants.GROUP_DEFAULT_ALREADY, "This is already the default group!" },
@@ -162,7 +163,7 @@ namespace ChubbyQuokka.LoonePermissions
             { TranslationConstants.MIGRATE_FINISH, "The migration has finished!"},
             { TranslationConstants.MIGRATE_FAIL, "The migration has failed!"}
         };
-
+        
         internal static void Say(IRocketPlayer caller, string message, Color color, params object[] objs)
         {
             Action say = () =>
@@ -186,7 +187,7 @@ namespace ChubbyQuokka.LoonePermissions
                 say.Invoke();
             }
         }
-
+        
         internal static void Log(string message, ConsoleColor color = ConsoleColor.White)
         {
             Action log = () =>
