@@ -24,7 +24,7 @@ namespace ChubbyQuokka.LoonePermissions
         internal static IGameHook GameHook { get; private set; }
 
         static List<IGameHook> hooks = new List<IGameHook>();
-        static IRocketPermissionsProvider RocketPermissionProvider;
+        internal static IRocketPermissionsProvider RocketPermissionProvider;
         static MySqlPermissionProvider Provider;
 
         protected override void Load()
@@ -62,7 +62,7 @@ namespace ChubbyQuokka.LoonePermissions
             UnloadPlugin();
             return;
 
-            FoundRocketAssembly:
+        FoundRocketAssembly:
 
             //Releasing the extra hooks.
             hooks.Clear();
@@ -139,7 +139,7 @@ namespace ChubbyQuokka.LoonePermissions
             ThreadedWorkManager.EnqueueWorkerThread(refresh);
         }
 
-        public override TranslationList DefaultTranslations =>  new TranslationList
+        public override TranslationList DefaultTranslations => new TranslationList
         {
             { TranslationConstants.INVALID_ARGS, "You have specified an invalid arguement!" },
             { TranslationConstants.INVALID_PERMS, "You don't have permission to do this!" },
@@ -163,7 +163,7 @@ namespace ChubbyQuokka.LoonePermissions
             { TranslationConstants.MIGRATE_FINISH, "The migration has finished!"},
             { TranslationConstants.MIGRATE_FAIL, "The migration has failed!"}
         };
-        
+
         internal static void Say(IRocketPlayer caller, string message, Color color, params object[] objs)
         {
             Action say = () =>
@@ -187,7 +187,7 @@ namespace ChubbyQuokka.LoonePermissions
                 say.Invoke();
             }
         }
-        
+
         internal static void Log(string message, ConsoleColor color = ConsoleColor.White)
         {
             Action log = () =>

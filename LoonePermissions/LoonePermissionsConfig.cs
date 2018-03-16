@@ -19,6 +19,11 @@ namespace ChubbyQuokka.LoonePermissions
         public _AdvancedSettings advancedSettings;
         public static _AdvancedSettings AdvancedSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.advancedSettings;
 
+        public static void SetDefaultGroup(string groupId)
+        {
+
+        }
+
         public void LoadDefaults()
         {
             defaultGroup = "default";

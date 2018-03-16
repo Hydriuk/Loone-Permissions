@@ -7,6 +7,8 @@ using Rocket.API.Serialisation;
 using MySql.Data.MySqlClient;
 using System.Text;
 using System.Linq;
+using System.Diagnostics;
+using Rocket.Core.Assets;
 
 namespace ChubbyQuokka.LoonePermissions.Managers
 {
@@ -18,6 +20,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         static LoonePermissionsConfig._DatabaseSettings Settings => LoonePermissionsConfig.DatabaseSettings;
 
         static RocketPermissions internalPerms;
+        static object internalPermsLock = new object();
 
         public static void Initialize()
         {
@@ -111,7 +114,82 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
         internal static void Refresh()
         {
+            RocketPermissions temp = new RocketPermissions();
 
+            var cmd1 = CreateCommand();
+            var cmd2 = CreateCommand();
+            var cmd3 = CreateCommand();
+
+            cmd1.CommandText = Queries.SelectAllGroups;
+            cmd2.CommandText = Queries.SelectAllPermissions;
+            cmd3.CommandText = Queries.SelectAllPlayers;
+
+            Dictionary<string, RocketPermissionsGroup> dict = new Dictionary<string, RocketPermissionsGroup>();
+
+            OpenConnection();
+
+            var dr1 = cmd1.ExecuteReader();
+
+            while (dr1.Read())
+            {
+                RocketPermissionsGroup g = new RocketPermissionsGroup
+                {
+                    Members = new List<string>(),
+                    Permissions = new List<Permission>(),
+                    Id = dr1.GetString(0),
+                    DisplayName = dr1.GetString(1),
+                    ParentGroup = dr1.GetString(2),
+                    Prefix = dr1.GetString(3),
+                    Suffix = dr1.GetString(4),
+                    Color = dr1.GetString(5),
+                    Priority = dr1.GetInt16(6)
+                };
+
+                dict.Add(g.Id, g);
+            }
+
+            dr1.Close();
+            dr1.Dispose();
+
+            var dr2 = cmd2.ExecuteReader();
+
+            while (dr2.Read())
+            {
+                string group = dr2.GetString(0);
+
+                Permission p = new Permission(dr2.GetString(1), dr2.GetUInt32(2));
+
+                if (dict.TryGetValue(group, out RocketPermissionsGroup g))
+                {
+                    g.Permissions.Add(p);
+                }
+            }
+
+            dr2.Close();
+            dr2.Dispose();
+
+            var dr3 = cmd3.ExecuteReader();
+
+            while (dr3.Read())
+            {
+                ulong cSteamId = dr3.GetUInt64(0);
+                string group = dr3.GetString(1);
+
+                if (dict.TryGetValue(group, out RocketPermissionsGroup g))
+                {
+                    g.Members.Add(cSteamId.ToString());
+                }
+            }
+
+            dr3.Close();
+            dr3.Dispose();
+
+            CloseConnection();
+
+            lock (internalPermsLock)
+            {
+                internalPerms = temp;
+            }
         }
 
         static MySqlCommand CreateCommand()
@@ -130,8 +208,10 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             {
                 ThreadedConnection.Open();
             }
-
-            UnthreadedConnection.Open();
+            else
+            {
+                UnthreadedConnection.Open();
+            }
         }
 
         static void CloseConnection()
@@ -140,8 +220,10 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             {
                 ThreadedConnection.Close();
             }
-
-            UnthreadedConnection.Close();
+            else
+            {
+                UnthreadedConnection.Close();
+            }
         }
 
         public static RocketPermissionsProviderResult AddGroup(RocketPermissionsGroup group)
@@ -181,7 +263,53 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
         public static bool Migrate()
         {
-            throw new NotImplementedException();
+            try
+            {
+                Stopwatch timer = new Stopwatch();
+                timer.Start();
+
+                RocketPermissions p = new XMLFileAsset<RocketPermissions>(Rocket.Core.Environment.PermissionFile, null, null).Instance;
+
+                var cmd1 = CreateCommand();
+                var cmd2 = CreateCommand();
+                var cmd3 = CreateCommand();
+                var cmd4 = CreateCommand();
+                var cmd5 = CreateCommand();
+                var cmd6 = CreateCommand();
+
+                cmd1.CommandText = Queries.DeleteAllFromGroups;
+                cmd2.CommandText = Queries.DeleteAllFromPlayers;
+                cmd3.CommandText = Queries.DeleteAllFromPermissions;
+                cmd4.CommandText = Queries.InsertGroupsIntoGroups(p.Groups);
+                cmd5.CommandText = Queries.InsertGroupsIntoPlayers(p.Groups);
+                cmd6.CommandText = Queries.InsertGroupsIntoPermissions(p.Groups);
+
+                OpenConnection();
+
+                cmd1.ExecuteNonQuery();
+                cmd2.ExecuteNonQuery();
+                cmd3.ExecuteNonQuery();
+                cmd4.ExecuteNonQuery();
+                cmd5.ExecuteNonQuery();
+                cmd6.ExecuteNonQuery();
+
+                CloseConnection();
+
+                LoonePermissionsConfig.SetDefaultGroup(p.DefaultGroup);
+
+                timer.Stop();
+
+                LoonePermissionsPlugin.Log($"Migration took {timer.ElapsedMilliseconds} milliseconds to complete!", ConsoleColor.Yellow);
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                LoonePermissionsPlugin.Log("Migration failed!", ConsoleColor.Red);
+                LoonePermissionsPlugin.LogException(e);
+
+                return false;
+            }
         }
 
         static class Queries
@@ -190,8 +318,8 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
             public static string Connection => $"SERVER={Settings.Address};DATABASE={Settings.Database};UID={Settings.Username};PASSWORD={Settings.Password};PORT={Settings.Port};";
 
-            public static string CreateGroupTable => $"CREATE TABLE `{Settings.GroupsTableName}` (`groupid` VARCHAR(64) NOT NULL UNIQUE, `groupname` VARCHAR(64) NOT NULL, `parent` VARCHAR(64), `prefix` VARCHAR(64), `suffix` VARCHAR(64), `color` VARCHAR(16) DEFAULT 'white', `priority` BIGINT DEFAULT '100', PRIMARY KEY (`groupid`))";
-            public static string CreatePermissionTable => $"CREATE TABLE `{Settings.PermissionsTableName}` (`groupid` VARCHAR(64) NOT NULL, `permission` VARCHAR(64) NOT NULL, `cooldown` INTEGER DEFAULT '0')";
+            public static string CreateGroupTable => $"CREATE TABLE `{Settings.GroupsTableName}` (`groupid` VARCHAR(64) NOT NULL UNIQUE, `groupname` VARCHAR(64) NOT NULL, `parent` VARCHAR(64) NOT NULL DEFAULT '', `prefix` VARCHAR(64) NOT NULL, `suffix` VARCHAR(64) NOT NULL, `color` VARCHAR(16) NOT NULL DEFAULT 'white', `priority` BIGINT NOT NULL DEFAULT '100', PRIMARY KEY (`groupid`))";
+            public static string CreatePermissionTable => $"CREATE TABLE `{Settings.PermissionsTableName}` (`groupid` VARCHAR(64) NOT NULL, `permission` VARCHAR(64) NOT NULL, `cooldown` INTEGER NOT NULL DEFAULT '0')";
             public static string CreatePlayerTable => $"CREATE TABLE `{Settings.PlayerTableName}` (`csteamid` BIGINT NOT NULL, `groupid` VARCHAR(64) NOT NULL)";
 
             public static string ShowTablesLikeGroupTable => $"SHOW TABLES LIKE '{Settings.GroupsTableName}'";
@@ -215,6 +343,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             public static string SelectGroupByGroupId(string groupId) => $"SELECT 1 FROM `{Settings.GroupsTableName}` WHERE `groupid` = '{groupId}'";
 
             public static string InsertPlayerToPlayers(ulong steamId, string groupId) => $"INSERT INTO `{Settings.PlayerTableName}` VALUES ('{steamId}', '{groupId}')";
+            public static string DeletePlayerFromPlayers(ulong steamId, string groupId) => $"DELETE FROM `{Settings.PlayerTableName}'` WHERE `steamid` = '{steamId}' AND `groupid` = '{groupId}'";
 
             public static string GroupExists(string groupId) => $"SELECT EXISTS (SELECT * FROM `{Settings.GroupsTableName}` WHERE `groupid` = '{groupId}')";
             public static string PermissionExists(string permission, string groupId) => $"SELECT EXISTS (SELECT * FROM `{Settings.PermissionsTableName}` WHERE `groupid` = '{groupId}' AND `permission` = '{permission}')";
@@ -333,13 +462,13 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             #endregion
 
             #region Migration
-            public static string InsertGroupsIntoGroups(RocketPermissionsGroup[] groups)
+            public static string InsertGroupsIntoGroups(List<RocketPermissionsGroup> groups)
             {
                 if (groups != null)
                 {
-                    groups = groups.Where(x => x != null).ToArray();
+                    groups = groups.Where(x => x != null).ToList();
 
-                    if (groups.Length != 0)
+                    if (groups.Count != 0)
                     {
                         StringBuilder sb = new StringBuilder();
 
@@ -347,7 +476,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                         sb.Append(Settings.GroupsTableName);
                         sb.Append("` VALUES");
 
-                        for (int i = 0; i < groups.Length; i++)
+                        for (int i = 0; i < groups.Count; i++)
                         {
                             RocketPermissionsGroup g = groups[i];
 
@@ -383,13 +512,13 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                 throw new ArgumentNullException(nameof(groups));
             }
 
-            public static string InsertGroupsIntoPlayers(RocketPermissionsGroup[] groups)
+            public static string InsertGroupsIntoPlayers(List<RocketPermissionsGroup> groups)
             {
                 if (groups != null)
                 {
-                    groups = groups.Where(x => x != null).ToArray();
+                    groups = groups.Where(x => x != null).ToList();
 
-                    if (groups.Length != 0)
+                    if (groups.Count != 0)
                     {
                         StringBuilder sb = new StringBuilder();
 
@@ -401,7 +530,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                         List<string> Players = new List<string>();
                         List<string> Groups = new List<string>();
 
-                        for (int i = 0; i < groups.Length; i++)
+                        for (int i = 0; i < groups.Count; i++)
                         {
                             if (groups[i].Members != null && groups[i].Members.Count != 0)
                             {
@@ -438,13 +567,13 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                 throw new ArgumentNullException(nameof(groups));
             }
 
-            public static string InsertGroupsIntoPermissions(RocketPermissionsGroup[] groups)
+            public static string InsertGroupsIntoPermissions(List<RocketPermissionsGroup> groups)
             {
                 if (groups != null)
                 {
-                    groups = groups.Where(x => x != null).ToArray();
+                    groups = groups.Where(x => x != null).ToList();
 
-                    if (groups.Length != 0)
+                    if (groups.Count != 0)
                     {
                         StringBuilder sb = new StringBuilder();
 
@@ -452,10 +581,11 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                         sb.Append(Settings.PermissionsTableName);
                         sb.Append("` VALUES");
 
+                        //Again, thank you .NET 3.5 for not having Tuples.
                         List<Permission> Permissions = new List<Permission>();
                         List<string> Groups = new List<string>();
 
-                        for (int i = 0; i < groups.Length; i++)
+                        for (int i = 0; i < groups.Count; i++)
                         {
                             if (groups[i].Permissions != null && groups[i].Permissions.Count != 0)
                             {
