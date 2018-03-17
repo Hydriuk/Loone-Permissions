@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 using Rocket.API;
@@ -15,15 +16,30 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         }
 
         #region Blocking Calls
-        public static RocketPermissionsProviderResult AddGroupBlocking(RocketPermissionsGroup group) => MySqlManager.AddGroup(group);
+        public static RocketPermissionsProviderResult AddGroupBlocking(RocketPermissionsGroup group)
+        {
+            return MySqlManager.AddGroup(group);
+        }
 
-        public static RocketPermissionsProviderResult DeleteGroupBlocking(string groupId) => MySqlManager.DeleteGroup(groupId);
+        public static RocketPermissionsProviderResult DeleteGroupBlocking(string groupId)
+        {
+            return MySqlManager.DeleteGroup(groupId);
+        }
 
-        public static RocketPermissionsProviderResult SaveGroupBlocking(RocketPermissionsGroup group) => MySqlManager.SaveGroup(group);
+        public static RocketPermissionsProviderResult SaveGroupBlocking(RocketPermissionsGroup group)
+        {
+            return MySqlManager.SaveGroup(group);
+        }
 
-        public static RocketPermissionsProviderResult AddPlayerToGroupBlocking(string groupId, IRocketPlayer player) => MySqlManager.AddPlayerToGroup(groupId, player);
+        public static RocketPermissionsProviderResult AddPlayerToGroupBlocking(string groupId, IRocketPlayer player)
+        {
+            return MySqlManager.AddPlayerToGroup(groupId, player);
+        }
 
-        public static RocketPermissionsProviderResult RemovePlayerFromGroupBlocking(string groupId, IRocketPlayer player) => MySqlManager.RemovePlayerFromGroup(groupId, player);
+        public static RocketPermissionsProviderResult RemovePlayerFromGroupBlocking(string groupId, IRocketPlayer player)
+        {
+            return MySqlManager.RemovePlayerFromGroup(groupId, player);
+        }
 
         public static RocketPermissionsGroup GetGroupBlocking(string groupId) {
             RocketPermissionsGroup g = MySqlManager.GetGroup(groupId);
@@ -46,18 +62,14 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             List<Permission> perms = null;
 
-            //Processing
+            List<RocketPermissionsGroup> groups = MySqlManager.GetGroups(player, true);
 
             return perms;
         }
 
         public static List<Permission> GetPermissionsBlocking(IRocketPlayer player, List<string> requestedPermissions)
         {
-            List<Permission> perms = null;
-
-            //Processing
-
-            return perms;
+            return GetPermissionsBlocking(player).Where(x => requestedPermissions.Contains(x.Name)).ToList();
         }
 
         public static bool HasPermissionBlocking(IRocketPlayer player, List<string> requestedPermissions)

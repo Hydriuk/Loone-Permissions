@@ -64,7 +64,7 @@ namespace ChubbyQuokka.LoonePermissions
 
         FoundRocketAssembly:
 
-            //Releasing the extra hooks.
+            //Releasing the references to the extra hooks. (lol only one hook rn anyway)
             hooks.Clear();
 
             Log(string.Format("Welcome to Loone Permissions v{0}!", Assembly.GetName().Version), ConsoleColor.Yellow);
@@ -92,17 +92,15 @@ namespace ChubbyQuokka.LoonePermissions
                 RocketPermissionProvider = null;
             }
 
+            CancelInvoke();
+
             ThreadedWorkManager.Destroy();
             MySqlManager.Destroy();
             CommandManager.Destroy();
 
-            CancelInvoke();
-
             GameHook = null;
             GameAssembly = null;
             RocketAssembly = null;
-
-            hooks.Clear();
 
             Instance = null;
         }

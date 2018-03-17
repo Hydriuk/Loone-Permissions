@@ -7,21 +7,26 @@ namespace ChubbyQuokka.LoonePermissions
     [XmlRoot(ElementName = "LoonePermissions")]
     public sealed class LoonePermissionsConfig : IRocketPluginConfiguration
     {
+        [XmlElement("DefaultGroup")]
         public string defaultGroup;
         public static string DefaultGroup => LoonePermissionsPlugin.Instance.Configuration.Instance.defaultGroup;
 
+        [XmlElement("DatabaseSettings")]
         public _DatabaseSettings databaseSettings;
         public static _DatabaseSettings DatabaseSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.databaseSettings;
 
+        [XmlElement("CacheModeSettings")]
         public _CacheModeSettings cacheModeSettings;
         public static _CacheModeSettings CacheModeSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.cacheModeSettings;
 
+        [XmlElement("AdvancedSettings")]
         public _AdvancedSettings advancedSettings;
         public static _AdvancedSettings AdvancedSettings => LoonePermissionsPlugin.Instance.Configuration.Instance.advancedSettings;
 
         public static void SetDefaultGroup(string groupId)
         {
-
+            LoonePermissionsPlugin.Instance.Configuration.Instance.defaultGroup = groupId;
+            LoonePermissionsPlugin.Instance.Configuration.Save();
         }
 
         public void LoadDefaults()
@@ -52,8 +57,7 @@ namespace ChubbyQuokka.LoonePermissions
                 WorkerThreadSleepTime = 100
             };
         }
-
-        [XmlRoot(ElementName = "DatabaseSettings")]
+        
         public struct _DatabaseSettings
         {
             public string Database;
@@ -66,15 +70,13 @@ namespace ChubbyQuokka.LoonePermissions
             public string PermissionsTableName;
             public string GroupsTableName;
         }
-
-        [XmlRoot(ElementName = "SyncModeSettings")]
+        
         public struct _CacheModeSettings
         {
             public bool Enabled;
             public uint SyncTime;
         }
-
-        [XmlRoot(ElementName = "AdvancedSettings")]
+        
         public struct _AdvancedSettings
         {
             public bool UseAsyncCommands;

@@ -28,6 +28,8 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             {
                 Name = "LoonePermissions_WorkerThread"
             };
+
+            WorkerThread.Start();
         }
 
         internal static void Destroy()
@@ -90,17 +92,17 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
         public static void EnqueueWorkerThread(Action action)
         {
-            lock (UnthreadedLock)
+            lock (ThreadedLock)
             {
-                UnthreadedBuffer.Enqueue(action);
+                ThreadedBuffer.Enqueue(action);
             }
         }
 
         public static void EnqueueMainThread(Action action)
         {
-            lock (ThreadedLock)
+            lock (UnthreadedLock)
             {
-                ThreadedBuffer.Enqueue(action);
+                UnthreadedBuffer.Enqueue(action);
             }
         }
     }
