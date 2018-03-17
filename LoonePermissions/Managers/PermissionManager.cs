@@ -31,50 +31,75 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             return MySqlManager.SaveGroup(group);
         }
 
+        //READY
         public static RocketPermissionsProviderResult AddPlayerToGroupBlocking(string groupId, IRocketPlayer player)
         {
             return MySqlManager.AddPlayerToGroup(groupId, player);
         }
 
+        //READY
         public static RocketPermissionsProviderResult RemovePlayerFromGroupBlocking(string groupId, IRocketPlayer player)
         {
             return MySqlManager.RemovePlayerFromGroup(groupId, player);
         }
-
+        
+        //READY
         public static RocketPermissionsGroup GetGroupBlocking(string groupId) {
-            RocketPermissionsGroup g = MySqlManager.GetGroup(groupId);
-
-            //Processing
-
-            return g;
+            return MySqlManager.GetGroup(groupId);
         }
 
+        //READY
         public static List<RocketPermissionsGroup> GetGroupsBlocking(IRocketPlayer player, bool includeParentGroups)
         {
-            List<RocketPermissionsGroup> groups = MySqlManager.GetGroups(player, includeParentGroups);
-
-            //Processing
-
-            return groups;
+            return MySqlManager.GetGroups(player, includeParentGroups);
         }
 
+        //READY
         public static List<Permission> GetPermissionsBlocking(IRocketPlayer player)
         {
-            List<Permission> perms = null;
-
             List<RocketPermissionsGroup> groups = MySqlManager.GetGroups(player, true);
+            groups.Reverse();
+
+            List<Permission> perms = new List<Permission>();
+
+            foreach (RocketPermissionsGroup g in groups)
+            {
+                foreach (Permission p in g.Permissions)
+                {
+                    p.Name = p.Name.ToLowerInvariant();
+
+                    if (p.Name.StartsWith("-"))
+                    {
+                        perms.RemoveAll(x => string.Equals(x.Name, p.Name.Replace("-", ""), StringComparison.InvariantCulture));
+                    }
+                    else
+                    {
+                        perms.RemoveAll(x => x.Name == p.Name);
+                        perms.Add(p);
+                    }
+                }
+            }
 
             return perms;
         }
 
+        //READY
         public static List<Permission> GetPermissionsBlocking(IRocketPlayer player, List<string> requestedPermissions)
         {
-            return GetPermissionsBlocking(player).Where(x => requestedPermissions.Contains(x.Name)).ToList();
+            List<string> newPerms = requestedPermissions.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.ToLowerInvariant()).Distinct().ToList();
+
+            return GetPermissionsBlocking(player).Where(x => newPerms.Contains(x.Name)).ToList();
         }
 
+        //READY
         public static bool HasPermissionBlocking(IRocketPlayer player, List<string> requestedPermissions)
         {
-            return false;
+            if (player.IsAdmin)
+            {
+                return true;
+            }
+
+            return GetPermissionsBlocking(player, requestedPermissions).Count != 0;
         }
 
         #endregion
