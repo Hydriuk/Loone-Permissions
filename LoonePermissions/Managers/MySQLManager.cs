@@ -161,7 +161,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             {
                 string group = dr2.GetString(0);
 
-                Permission p = new Permission(dr2.GetString(1));
+                Permission p = new Permission(dr2.GetString(1), dr2.GetUInt32(2));
 
                 if (dict.TryGetValue(group, out RocketPermissionsGroup g))
                 {
