@@ -144,9 +144,9 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                     Permissions = new List<Permission>(),
                     Id = dr1.GetString(0).ToLowerInvariant(),
                     DisplayName = dr1.GetString(1),
-                    ParentGroup = dr1.GetString(2).ToLowerInvariant(),
-                    Prefix = dr1.GetString(3),
-                    Suffix = dr1.GetString(4),
+                    ParentGroup = (string.IsNullOrEmpty(dr1.GetString(2)) ? "" : dr1.GetString(2)),
+                    Prefix = (string.IsNullOrEmpty(dr1.GetString(3)) ? "" : dr1.GetString(3)),
+                    Suffix = (string.IsNullOrEmpty(dr1.GetString(4)) ? "" :dr1.GetString(4)),
                     Color = dr1.GetString(5),
                     Priority = dr1.GetInt16(6)
                 };
@@ -161,7 +161,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
             while (dr2.Read())
             {
-                string group = dr2.GetString(0);
+                string group = dr2.GetString(0).ToLowerInvariant();
 
                 Permission p = new Permission(dr2.GetString(1), dr2.GetUInt32(2));
 
@@ -191,6 +191,9 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             dr3.Dispose();
 
             CloseConnection();
+
+            temp.Groups = dict.Values.ToList();
+            temp.DefaultGroup = LoonePermissionsConfig.DefaultGroup;
 
             lock (internalPermsLock)
             {
@@ -306,7 +309,10 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
             if (IsCacheMode)
             {
-                GetGroup(groupId).Members.Add(player.Id);
+                lock (internalPermsLock)
+                {
+                    GetGroup(groupId).Members.Add(player.Id);
+                }
             }
 
             return RocketPermissionsProviderResult.Success;
@@ -319,21 +325,35 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
             if (IsCacheMode)
             {
-                lock (internalPerms)
+                lock (internalPermsLock)
                 {
-                    groups = internalPerms.Groups.Where(x => x.Members.Contains(player.Id)).ToList();
+                    groups = internalPerms.Groups?.Where(x => x.Members.Contains(player.Id))?.ToList() ?? new List<RocketPermissionsGroup>();
                 }
 
-                groups.Add(GetGroup(LoonePermissionsConfig.DefaultGroup));
+                var def = GetGroup(LoonePermissionsConfig.DefaultGroup);
+
+                if (def != null)
+                {
+                    groups.Add(def);
+                }
+
+                LoonePermissionsPlugin.Log("a");
 
                 if (includeParentGroups)
                 {
-                    string[] args = groups.Select(x => x.ParentGroup).ToArray();
+                    LoonePermissionsPlugin.Log("b");
+                    string[] args = groups.Select(x => x.ParentGroup)?.Where(x => !string.IsNullOrEmpty(x))?.ToArray() ?? new string[0];
 
-                    GetGroups(groups, args, true, false);
+                    LoonePermissionsPlugin.Log("c");
+                    if (args.Length != 0)
+                    {
+                        LoonePermissionsPlugin.Log("d");
+                        GetGroups(groups, args, true, false);
+                    }
                 }
 
-                return groups.Distinct().OrderBy(x => x.Priority).ToList();
+                LoonePermissionsPlugin.Log("m");
+                return groups.Distinct().Where(x => x != null).OrderBy(x => x.Priority).ToList();
             }
 
             groups = new List<RocketPermissionsGroup>();
@@ -362,18 +382,27 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         }
 
         //READY
-        public static void GetGroups(List<RocketPermissionsGroup> groups, string[] ids, bool includeParent, bool reorder)
+        public static void GetGroups(List<RocketPermissionsGroup> groups, string[] isds, bool includeParent, bool reorder)
         {
-            ids = ids.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.ToLowerInvariant()).Distinct().ToArray();
+            List<string> ids = isds?.Where(x => !string.IsNullOrEmpty(x))?.Select(x => x.ToLowerInvariant())?.Distinct()?.ToList() ?? new List<string>();
+            LoonePermissionsPlugin.Log("e");
 
             if (IsCacheMode)
             {
-                groups.AddRange(internalPerms.Groups.Where(x => ids.Contains(x.Id)).ToList());
+                LoonePermissionsPlugin.Log("f");
+                lock (internalPermsLock)
+                {
+                    groups.AddRange(internalPerms.Groups.Where(x => ids.Contains(x.Id))?.ToList() ?? new List<RocketPermissionsGroup>());
+                }
+
+                LoonePermissionsPlugin.Log("g");
 
                 if (includeParent)
                 {
+                    LoonePermissionsPlugin.Log("h");
                     List<string> parentsNeeded1 = new List<string>();
 
+                    LoonePermissionsPlugin.Log("i");
                     foreach (RocketPermissionsGroup g in groups)
                     {
                         var parent = groups.Where(x => x.Id == g.ParentGroup).FirstOrDefault();
@@ -384,10 +413,15 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                         }
                     }
 
+                    LoonePermissionsPlugin.Log("j");
+
                     string[] parentsArray = parentsNeeded1.Distinct().ToArray();
+
+                    LoonePermissionsPlugin.Log("k");
 
                     if (parentsArray.Length != 0)
                     {
+                        LoonePermissionsPlugin.Log("l");
                         GetGroups(groups, parentsArray, true, false);
                     }
                 }
@@ -401,7 +435,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             }
 
             var cmd1 = CreateCommand();
-            cmd1.CommandText = Queries.SelectGroupsByGroupIds(ids);
+            cmd1.CommandText = Queries.SelectGroupsByGroupIds(ids.ToArray());
 
             OpenConnection();
             var dr1 = cmd1.ExecuteReader();
@@ -490,7 +524,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             {
                 lock (internalPermsLock)
                 {
-                    groups = internalPerms.Groups.Where(x => x.Members.Contains(player.Id)).Select(x => x.Id).Distinct().ToList();
+                    groups = internalPerms.Groups.Where(x => x.Members.Contains(player.Id)).Select(x => x.Id)?.Distinct()?.ToList() ?? new List<string>();
                 }
 
                 if (!groups.Contains(LoonePermissionsConfig.DefaultGroup))
@@ -536,7 +570,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                 lock (internalPermsLock)
                 {
-                    group = internalPerms.Groups.Where(x => x.Id == groupId.ToLowerInvariant()).FirstOrDefault();
+                    group = internalPerms.Groups.Where(x => x.Id == groupId.ToLowerInvariant())?.FirstOrDefault();
                 }
 
                 return group != null;
@@ -562,7 +596,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                 lock (internalPermsLock)
                 {
-                    group = internalPerms.Groups.Where(x => x.Id == groupId.ToLowerInvariant()).Where(x => x.Members.Contains(player.Id)).FirstOrDefault();
+                    group = internalPerms.Groups.Where(x => x.Id == groupId.ToLowerInvariant())?.Where(x => x.Members.Contains(player.Id))?.FirstOrDefault();
                 }
 
                 return group != null;
