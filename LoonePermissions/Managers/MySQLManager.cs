@@ -233,22 +233,95 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             }
         }
 
-        //TODO LATER :D
+        //READY
         public static RocketPermissionsProviderResult AddGroup(RocketPermissionsGroup group)
         {
-            throw new NotImplementedException();
+            if (!GroupExists(group.Id))
+            {
+                List<RocketPermissionsGroup> g = new List<RocketPermissionsGroup> { group };
+                var cmd1 = CreateCommand();
+                var cmd2 = CreateCommand();
+                var cmd3 = CreateCommand();
+
+                cmd1.CommandText = Queries.InsertGroupsIntoGroups(g);
+                cmd2.CommandText = Queries.InsertGroupsIntoPermissions(g);
+                cmd3.CommandText = Queries.InsertGroupsIntoPlayers(g);
+
+                OpenConnection();
+
+                cmd1.ExecuteNonQuery();
+                cmd2.ExecuteNonQuery();
+                cmd3.ExecuteNonQuery();
+
+                CloseConnection();
+
+                if (IsCacheMode)
+                {
+                    lock (internalPermsLock)
+                    {
+                        internalPerms.Groups.Add(group);
+                    }
+                }
+
+                return RocketPermissionsProviderResult.Success;
+            }
+            else
+            {
+                return RocketPermissionsProviderResult.DuplicateEntry;
+            }
         }
 
-        //TODO LATER :D
+        //READY
         public static RocketPermissionsProviderResult DeleteGroup(string groupId)
         {
-            throw new NotImplementedException();
+            if (GroupExists(groupId))
+            {
+                var cmd1 = CreateCommand();
+                var cmd2 = CreateCommand();
+                var cmd3 = CreateCommand();
+
+                cmd1.CommandText = Queries.DeleteFromGroups(groupId);
+                cmd2.CommandText = Queries.DeleteFromPermissions(groupId);
+                cmd3.CommandText = Queries.DeleteFromPlayers(groupId);
+
+                OpenConnection();
+
+                cmd1.ExecuteNonQuery();
+                cmd2.ExecuteNonQuery();
+                cmd3.ExecuteNonQuery();
+
+                CloseConnection();
+
+                if (IsCacheMode)
+                {
+                    lock (internalPermsLock)
+                    {
+                        internalPerms.Groups.RemoveAll(x => x.Id.Equals(groupId, StringComparison.InvariantCultureIgnoreCase));
+                    }
+                }
+
+                return RocketPermissionsProviderResult.Success;
+            }
+            else
+            {
+                return RocketPermissionsProviderResult.GroupNotFound;
+            }
         }
 
-        //TODO LATER :D
+        //READY
         public static RocketPermissionsProviderResult SaveGroup(RocketPermissionsGroup group)
         {
-            throw new NotImplementedException();
+            if (GroupExists(group.Id))
+            {
+                DeleteGroup(group.Id);
+                AddGroup(group);
+
+                return RocketPermissionsProviderResult.Success;
+            }
+            else
+            {
+                return RocketPermissionsProviderResult.GroupNotFound;
+            }
         }
 
         //READY
@@ -568,6 +641,13 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             if (IsPlayerInGroup(player, groupId))
             {
+                var cmd1 = CreateCommand();
+                cmd1.CommandText = Queries.DeletePlayerFromPlayers(player.Id, groupId);
+
+                OpenConnection();
+                cmd1.ExecuteNonQuery();
+                CloseConnection();
+
                 if (IsCacheMode)
                 {
                     lock (internalPermsLock)
@@ -575,13 +655,6 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                         internalPerms.Groups.Where(x => x.Id == groupId).First().Members.Remove(player.Id);
                     }
                 }
-
-                var cmd1 = CreateCommand();
-                cmd1.CommandText = Queries.DeletePlayerFromPlayers(player.Id, groupId);
-
-                OpenConnection();
-                cmd1.ExecuteNonQuery();
-                CloseConnection();
 
                 return RocketPermissionsProviderResult.Success;
             }
@@ -760,6 +833,10 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             public static string DeleteAllFromGroups => $"DELETE FROM `{Settings.GroupsTableName}`";
             public static string DeleteAllFromPermissions => $"DELETE FROM `{Settings.PermissionsTableName}`";
             public static string DeleteAllFromPlayers => $"DELETE FROM `{Settings.PlayerTableName}`";
+
+            public static string DeleteFromGroups(string groupId) => $"DELETE FROM `{Settings.GroupsTableName}` WHERE `groupid` = '{groupId}'";
+            public static string DeleteFromPermissions(string groupId) => $"DELETE FROM `{Settings.PermissionsTableName}` WHERE `groupid` = '{groupId}";
+            public static string DeleteFromPlayers(string groupId) => $"DELETE FROM `{Settings.PlayerTableName}` WHERE `groupid` = '{groupId}";
 
             public static string DeleteGroupFromGroup(string groupId) => $"DELETE FROM `{Settings.GroupsTableName}` WHERE `groupid` = '{groupId}'";
             public static string DeleteGroupFromPermissions(string groupId) => $"DELETE FROM `{Settings.PermissionsTableName}` WHERE `groupid` = '{groupId}'";
