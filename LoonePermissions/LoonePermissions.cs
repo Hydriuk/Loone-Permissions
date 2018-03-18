@@ -245,4 +245,23 @@ namespace ChubbyQuokka.LoonePermissions
             public const string MIGRATE_FAIL = "migrate_fail";
         }
     }
+
+    namespace Extensions
+    {
+        public static class StringCollectionExtensions
+        {
+            public static bool ContainsIgnoreCase(this IEnumerable<string> collection, string str)
+            {
+                foreach (string s in collection)
+                {
+                    if (str.Equals(s, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+    }
 }

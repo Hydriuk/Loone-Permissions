@@ -47,7 +47,7 @@ namespace ChubbyQuokka.LoonePermissions
 
             cacheModeSettings = new _CacheModeSettings
             {
-                Enabled = false,
+                Enabled = true,
                 SyncTime = 10000
             };
 

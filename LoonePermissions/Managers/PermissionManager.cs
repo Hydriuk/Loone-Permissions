@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Rocket.API;
 using Rocket.API.Serialisation;
 using Rocket.Core.Logging;
+using ChubbyQuokka.LoonePermissions.Extensions;
 
 namespace ChubbyQuokka.LoonePermissions.Managers
 {
@@ -44,7 +45,8 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         }
         
         //READY
-        public static RocketPermissionsGroup GetGroupBlocking(string groupId) {
+        public static RocketPermissionsGroup GetGroupBlocking(string groupId)
+        {
             return MySqlManager.GetGroup(groupId);
         }
 
@@ -57,25 +59,29 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         //READY
         public static List<Permission> GetPermissionsBlocking(IRocketPlayer player)
         {
-            List<RocketPermissionsGroup> groups = MySqlManager.GetGroups(player, true);
+            List<RocketPermissionsGroup> groups = MySqlManager.GetGroups(player, true) ?? new List<RocketPermissionsGroup>();
             groups.Reverse();
 
             List<Permission> perms = new List<Permission>();
 
             foreach (RocketPermissionsGroup g in groups)
             {
-                foreach (Permission p in g.Permissions)
+                if (g != null)
                 {
-                    p.Name = p.Name.ToLowerInvariant();
-
-                    if (p.Name.StartsWith("-"))
+                    foreach (Permission p in g.Permissions)
                     {
-                        perms.RemoveAll(x => string.Equals(x.Name, p.Name.Replace("-", ""), StringComparison.InvariantCulture));
-                    }
-                    else
-                    {
-                        perms.RemoveAll(x => x.Name == p.Name);
-                        perms.Add(p);
+                        if (p != null)
+                        {
+                            if (p.Name.StartsWith("-"))
+                            {
+                                perms.RemoveAll(x => string.Equals(x.Name, p.Name.Replace("-", ""), StringComparison.InvariantCultureIgnoreCase));
+                            }
+                            else
+                            {
+                                perms.RemoveAll(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase));
+                                perms.Add(p);
+                            }
+                        }
                     }
                 }
             }
@@ -86,9 +92,9 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         //READY
         public static List<Permission> GetPermissionsBlocking(IRocketPlayer player, List<string> requestedPermissions)
         {
-            List<string> newPerms = requestedPermissions.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.ToLowerInvariant()).Distinct().ToList();
+            List<string> newPerms = requestedPermissions?.Where(x => !string.IsNullOrEmpty(x))?.Select(x => x)?.Distinct()?.ToList() ?? new List<string>();
 
-            return GetPermissionsBlocking(player).Where(x => newPerms.Contains(x.Name)).ToList();
+            return GetPermissionsBlocking(player)?.Where(x => newPerms.ContainsIgnoreCase(x.Name))?.ToList() ?? new List<Permission>();
         }
 
         //READY
