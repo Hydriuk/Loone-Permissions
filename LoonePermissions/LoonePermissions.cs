@@ -129,12 +129,7 @@ namespace ChubbyQuokka.LoonePermissions
 
         void Refresh()
         {
-            Action refresh = () =>
-            {
-                MySqlManager.Refresh();
-            };
-
-            ThreadedWorkManager.EnqueueWorkerThread(refresh);
+            ThreadedWorkManager.EnqueueWorkerThread(MySqlManager.Refresh);
         }
 
         public override TranslationList DefaultTranslations => new TranslationList
@@ -152,11 +147,10 @@ namespace ChubbyQuokka.LoonePermissions
             { TranslationConstants.GROUP_EXISTS, "That group already exists!" },
             { TranslationConstants.GROUP_NOT_EXISTS, "That group doesn't exist!" },
             { TranslationConstants.GROUP_MODIFIED, "You have set the {0} of {1} to {2}!" },
-            { TranslationConstants.PERM_ADDED, "The permission {0} has been added to {1} with a cooldown of {2}!" },
+            { TranslationConstants.PERM_ADDED, "The permission {0} has been modified or added to {1} with a cooldown of {2}!" },
             { TranslationConstants.PERM_REMOVED, "The permission {0} has been removed from {1}!" },
             { TranslationConstants.PERM_EXISTS, "The group {0} already has the permission {1} with a cooldown of {2}! " },
             { TranslationConstants.PERM_NOT_EXISTS, "The group {0} doesn't have the permission {1}!" },
-            { TranslationConstants.PERM_MODIFIED, "The cooldown for {0} in the group {1} has been set to {2}!"},
             { TranslationConstants.MIGRATE_START, "The migration from XML to MySQL has started!"},
             { TranslationConstants.MIGRATE_FINISH, "The migration has finished!"},
             { TranslationConstants.MIGRATE_FAIL, "The migration has failed!"}
@@ -239,7 +233,6 @@ namespace ChubbyQuokka.LoonePermissions
             public const string PERM_REMOVED = "perm_removed";
             public const string PERM_EXISTS = "perm_exists";
             public const string PERM_NOT_EXISTS = "perm_not_exists";
-            public const string PERM_MODIFIED = "perm_modified";
             public const string MIGRATE_START = "migrate_start";
             public const string MIGRATE_FINISH = "migrate_finish";
             public const string MIGRATE_FAIL = "migrate_fail";

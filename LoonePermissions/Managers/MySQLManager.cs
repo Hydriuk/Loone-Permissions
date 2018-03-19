@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Text;
+using System.Linq;
+using System.Diagnostics;
 using System.Collections.Generic;
 
 using Rocket.API;
 using Rocket.API.Serialisation;
+using Rocket.Core.Assets;
 
 using MySql.Data.MySqlClient;
-using System.Text;
-using System.Linq;
-using System.Diagnostics;
-using Rocket.Core.Assets;
-using SDG.Unturned;
+
 using ChubbyQuokka.LoonePermissions.Extensions;
 
 namespace ChubbyQuokka.LoonePermissions.Managers
@@ -25,7 +25,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         static object internalPermsLock = new object();
 
         static bool IsCacheMode => LoonePermissionsConfig.CacheModeSettings.Enabled;
-        
+
         public static void Initialize()
         {
             UnthreadedConnection = new MySqlConnection(Queries.Connection);
@@ -97,7 +97,15 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
             if (obj1 == null && obj2 == null && obj3 == null)
             {
-                Migrate();
+                try
+                {
+                    Migrate();
+                }
+                catch (Exception e)
+                {
+                    LoonePermissionsPlugin.Log("Migration Failed!", ConsoleColor.Red);
+                    LoonePermissionsPlugin.LogException(e);
+                }
             }
         }
 
@@ -115,7 +123,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                 ThreadedConnection = null;
             }
         }
-        
+
         internal static void Refresh()
         {
             RocketPermissions temp = new RocketPermissions();
@@ -333,7 +341,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                 lock (internalPermsLock)
                 {
-                    g =  internalPerms.Groups.Where(x => x.Id.Equals(groupId, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    g = internalPerms.Groups.FirstOrDefault(x => x.Id.Equals(groupId, StringComparison.InvariantCultureIgnoreCase));
                 }
 
                 return g;
@@ -400,17 +408,17 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                 {
                     groups.Add(def);
                 }
-                
+
                 if (includeParentGroups)
                 {
                     string[] args = groups.Select(x => x.ParentGroup)?.Where(x => !string.IsNullOrEmpty(x))?.ToArray() ?? new string[0];
-                    
+
                     if (args.Length != 0)
                     {
                         groups.AddRange(GetGroups(args, true, false));
                     }
                 }
-                
+
                 return groups.Distinct()?.Where(x => x != null)?.OrderBy(x => x.Priority)?.ToList() ?? new List<RocketPermissionsGroup>();
             }
 
@@ -459,19 +467,19 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                 if (includeParent)
                 {
                     List<string> parentsNeeded1 = new List<string>();
-                    
+
                     foreach (RocketPermissionsGroup g in groups)
                     {
-                        var parent = groups.Where(x => x.Id == g.ParentGroup).FirstOrDefault();
+                        var parent = groups.FirstOrDefault(x => x.Id == g.ParentGroup);
 
                         if (parent == null)
                         {
                             parentsNeeded1.Add(g.ParentGroup);
                         }
                     }
-                    
+
                     string[] parentsArray = parentsNeeded1.Distinct().ToArray();
-                    
+
                     if (parentsArray.Length != 0)
                     {
                         groups.AddRange(GetGroups(parentsArray, true, false));
@@ -521,7 +529,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
 
                     if (includeParent)
                     {
-                        var parent = groups.Where(x => x.Id == g.ParentGroup).FirstOrDefault();
+                        var parent = groups.FirstOrDefault(x => x.Id == g.ParentGroup);
 
                         if (parent == null)
                         {
@@ -556,7 +564,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                         }
                         else
                         {
-                            cachedGroup = groups.Where(x => x.Id.Equals(group, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                            cachedGroup = groups.FirstOrDefault(x => x.Id.Equals(group, StringComparison.InvariantCultureIgnoreCase));
 
                             if (cachedGroup != null)
                             {
@@ -566,7 +574,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                     }
                     else
                     {
-                        cachedGroup = groups.Where(x => x.Id.Equals(group, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                        cachedGroup = groups.FirstOrDefault(x => x.Id.Equals(group, StringComparison.InvariantCultureIgnoreCase));
 
                         if (cachedGroup != null)
                         {
@@ -593,7 +601,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                         }
                         else
                         {
-                            cachedGroup = groups.Where(x => x.Id.Equals(group, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                            cachedGroup = groups.FirstOrDefault(x => x.Id.Equals(group, StringComparison.InvariantCultureIgnoreCase));
 
                             if (cachedGroup != null)
                             {
@@ -603,7 +611,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                     }
                     else
                     {
-                        cachedGroup = groups.Where(x => x.Id.Equals(group, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                        cachedGroup = groups.FirstOrDefault(x => x.Id.Equals(group, StringComparison.InvariantCultureIgnoreCase));
 
                         if (cachedGroup != null)
                         {
@@ -652,7 +660,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
                 {
                     lock (internalPermsLock)
                     {
-                        internalPerms.Groups.Where(x => x.Id == groupId).First().Members.Remove(player.Id);
+                        internalPerms.Groups.First(x => x.Id == groupId).Members.Remove(player.Id);
                     }
                 }
 
@@ -760,56 +768,158 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             return result != null;
         }
 
+        public static bool PermissionExists(string permission, string groupId)
+        {
+            if (IsCacheMode)
+            {
+                RocketPermissionsGroup group;
+
+                lock (internalPermsLock)
+                {
+                    group = internalPerms.Groups.Where(x => x.Id.Equals(groupId, StringComparison.InvariantCultureIgnoreCase))?.FirstOrDefault();
+                }
+
+                return group.Permissions.Where(x => x.Name.Equals(permission, StringComparison.InvariantCultureIgnoreCase))?.FirstOrDefault() != null;
+            }
+
+            var cmd1 = CreateCommand();
+
+            cmd1.CommandText = Queries.PermissionExists(permission, groupId);
+
+            OpenConnection();
+            var result = cmd1.ExecuteScalar();
+            CloseConnection();
+
+            return result != null;
+        }
+
+        public static void AddPermissionToGroup(Permission perm, string groupId)
+        {
+            var cmd1 = CreateCommand();
+            cmd1.CommandText = Queries.InsertPermissionIntoPermission(perm.Name, perm.Cooldown, groupId);
+
+            OpenConnection();
+            cmd1.ExecuteNonQuery();
+            CloseConnection();
+
+            if (IsCacheMode)
+            {
+                lock (internalPermsLock)
+                {
+                    internalPerms.Groups.First(x => x.Id.Equals(groupId, StringComparison.InvariantCultureIgnoreCase)).Permissions.Add(perm);
+                }
+            }
+        }
+
+        public static void DeletePermissionFromGroup(string permission, string groupId)
+        {
+            var cmd1 = CreateCommand();
+            cmd1.CommandText = Queries.DeletePermissionFromPermission(permission, groupId);
+
+            OpenConnection();
+            cmd1.ExecuteNonQuery();
+            CloseConnection();
+
+            if (IsCacheMode)
+            {
+                lock (internalPermsLock)
+                {
+                    internalPerms.Groups.First(x => x.Id.Equals(groupId, StringComparison.InvariantCultureIgnoreCase)).Permissions.RemoveAll(x => x.Name.Equals(permission, StringComparison.InvariantCultureIgnoreCase));
+                }
+            }
+        }
+
+        public static void ModifyGroup(string groupId, string param, string value)
+        {
+            var cmd1 = CreateCommand();
+            cmd1.CommandText = Queries.UpdateGroup(groupId, param, value);
+
+            OpenConnection();
+            cmd1.ExecuteNonQuery();
+            CloseConnection();
+
+            if (IsCacheMode)
+            {
+                RocketPermissionsGroup g;
+
+                lock (internalPermsLock)
+                {
+                    g = internalPerms.Groups.First(x => x.Id.Equals(groupId, StringComparison.InvariantCultureIgnoreCase));
+
+                    switch (param.ToLowerInvariant())
+                    {
+                        case "groupid":
+                            g.Id = value;
+                            break;
+
+                        case "displayname":
+                            g.DisplayName = value;
+                            break;
+
+                        case "parent":
+                            g.ParentGroup = value;
+                            break;
+
+                        case "suffix":
+                            g.Suffix = value;
+                            break;
+
+                        case "prefix":
+                            g.Prefix = value;
+                            break;
+
+                        case "color":
+                            g.Color = value;
+                            break;
+
+                        case "priority":
+                            g.Priority = short.Parse(value);
+                            break;
+                    }
+                }
+            }
+        }
+
         //READY
         public static bool Migrate()
         {
-            try
-            {
-                Stopwatch timer = new Stopwatch();
-                timer.Start();
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
 
-                RocketPermissions p = new XMLFileAsset<RocketPermissions>(Rocket.Core.Environment.PermissionFile, null, null).Instance;
+            RocketPermissions p = new XMLFileAsset<RocketPermissions>(Rocket.Core.Environment.PermissionFile, null, null).Instance;
 
-                var cmd1 = CreateCommand();
-                var cmd2 = CreateCommand();
-                var cmd3 = CreateCommand();
-                var cmd4 = CreateCommand();
-                var cmd5 = CreateCommand();
-                var cmd6 = CreateCommand();
+            var cmd1 = CreateCommand();
+            var cmd2 = CreateCommand();
+            var cmd3 = CreateCommand();
+            var cmd4 = CreateCommand();
+            var cmd5 = CreateCommand();
+            var cmd6 = CreateCommand();
 
-                cmd1.CommandText = Queries.DeleteAllFromGroups;
-                cmd2.CommandText = Queries.DeleteAllFromPlayers;
-                cmd3.CommandText = Queries.DeleteAllFromPermissions;
-                cmd4.CommandText = Queries.InsertGroupsIntoGroups(p.Groups);
-                cmd5.CommandText = Queries.InsertGroupsIntoPlayers(p.Groups);
-                cmd6.CommandText = Queries.InsertGroupsIntoPermissions(p.Groups);
+            cmd1.CommandText = Queries.DeleteAllFromGroups;
+            cmd2.CommandText = Queries.DeleteAllFromPlayers;
+            cmd3.CommandText = Queries.DeleteAllFromPermissions;
+            cmd4.CommandText = Queries.InsertGroupsIntoGroups(p.Groups);
+            cmd5.CommandText = Queries.InsertGroupsIntoPlayers(p.Groups);
+            cmd6.CommandText = Queries.InsertGroupsIntoPermissions(p.Groups);
 
-                OpenConnection();
+            OpenConnection();
 
-                cmd1.ExecuteNonQuery();
-                cmd2.ExecuteNonQuery();
-                cmd3.ExecuteNonQuery();
-                cmd4.ExecuteNonQuery();
-                cmd5.ExecuteNonQuery();
-                cmd6.ExecuteNonQuery();
+            cmd1.ExecuteNonQuery();
+            cmd2.ExecuteNonQuery();
+            cmd3.ExecuteNonQuery();
+            cmd4.ExecuteNonQuery();
+            cmd5.ExecuteNonQuery();
+            cmd6.ExecuteNonQuery();
 
-                CloseConnection();
+            CloseConnection();
 
-                LoonePermissionsConfig.SetDefaultGroup(p.DefaultGroup);
+            LoonePermissionsConfig.SetDefaultGroup(p.DefaultGroup);
 
-                timer.Stop();
+            timer.Stop();
 
-                LoonePermissionsPlugin.Log($"Migration took {timer.ElapsedMilliseconds} milliseconds to complete!", ConsoleColor.Yellow);
+            LoonePermissionsPlugin.Log($"Migration took {timer.ElapsedMilliseconds} milliseconds to complete!", ConsoleColor.Yellow);
 
-                return true;
-            }
-            catch (Exception e)
-            {
-                LoonePermissionsPlugin.Log("Migration failed!", ConsoleColor.Red);
-                LoonePermissionsPlugin.LogException(e);
-
-                return false;
-            }
+            return true;
         }
 
         static class Queries
@@ -852,6 +962,9 @@ namespace ChubbyQuokka.LoonePermissions.Managers
             public static string GroupExists(string groupId) => $"SELECT 1 FROM `{Settings.GroupsTableName}` WHERE `groupid` = '{groupId}' LIMIT 1";
             public static string PermissionExists(string permission, string groupId) => $"SELECT 1 FROM `{Settings.PermissionsTableName}` WHERE `groupid` = '{groupId}' AND `permission` = '{permission}' LIMIT 1";
             public static string PlayerExists(string steamId, string groupId) => $"SELECT 1 FROM `{Settings.PlayerTableName}` WHERE `groupid` = '{groupId}' AND `csteamid` = '{steamId}' LIMIT 1";
+
+            public static string DeletePermissionFromPermission(string permission, string groupId) => $"DELETE FROM `{Settings.PermissionsTableName}` WHERE `groupid` = '{groupId}' AND `permission` = '{permission}'";
+            public static string InsertPermissionIntoPermission(string permission, uint cooldown, string groupId) => $"INSERT INTO `{Settings.PermissionsTableName}` VALUES ('{groupId}', '{permission}', '{cooldown}')";
 
             public static string UpdateGroup(string groupId, string param, string value) => $"UPDATE `{Settings.GroupsTableName}` SET `{param}` = '{value}' WHERE `groupid` = '{groupId}'";
             public static string UpdatePermission(string groupId, string permission, string newCooldown) => $"UPDATE `{Settings.PermissionsTableName}` SET `cooldown` = '{newCooldown}' WHERE `groupid` = '{groupId}' AND `permission` = '{permission}'";

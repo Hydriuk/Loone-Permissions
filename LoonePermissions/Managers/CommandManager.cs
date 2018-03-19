@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using ChubbyQuokka.LoonePermissions;
 using ChubbyQuokka.LoonePermissions.API;
 using ChubbyQuokka.LoonePermissions.Managers;
+using ChubbyQuokka.LoonePermissions.Commands;
 
 using Rocket.API;
 using Rocket.Core;
@@ -21,15 +22,15 @@ namespace ChubbyQuokka.LoonePermissions.Managers
         {
             commands = new Dictionary<string, ILooneCommand>();
 
-            /*
-            RegisterCommand("create", new CommandCreate());
+
+            //RegisterCommand("create", new CommandCreate());
             RegisterCommand("delete", new CommandDelete());
             RegisterCommand("add", new CommandAdd());
             RegisterCommand("remove", new CommandRemove());
             RegisterCommand("default", new CommandRemove());
-            RegisterCommand("group", new CommandGroup());
+            //RegisterCommand("group", new CommandGroup());
             RegisterCommand("migrate", new CommandMigrate());
-            */
+
         }
 
         public static void Destroy()
@@ -81,7 +82,7 @@ namespace ChubbyQuokka.LoonePermissions.Managers
     }
 }
 
-namespace LoonePermissions
+namespace ChubbyQuokka.LoonePermissions
 {
     public sealed class LooneCommand : IRocketCommand
     {
