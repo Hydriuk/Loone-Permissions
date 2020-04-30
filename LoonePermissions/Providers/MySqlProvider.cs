@@ -51,7 +51,14 @@ namespace LoonePermissions.Providers
             List<Permission> perms = new List<Permission>();
 
             foreach (RocketPermissionsGroup str in groupId)
-                perms.AddRange(MySqlManager.GetPermissionsByGroup(str.Id, false));
+            {
+                List<Permission> groupPerms = MySqlManager.GetPermissionsByGroup(str.Id, false);
+                foreach (var item in groupPerms)
+                {
+                    if (!perms.Any(x => x.Name == item.Name))
+                        perms.Add(item);
+                }
+            }
 
             return perms;
         }
