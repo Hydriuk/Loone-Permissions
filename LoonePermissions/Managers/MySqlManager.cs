@@ -32,6 +32,7 @@ namespace LoonePermissions.Managers
             PERMISSION_TABLE = LoonePermissionsConfig.DatabaseSettings.PermissionsTableName;
             PLAYER_TABLE = LoonePermissionsConfig.DatabaseSettings.PlayerTableName;
 
+
             connection = new MySqlConnection(string.Format("SERVER={0};DATABASE={1};UID={2};PASSWORD={3};PORT={4};", LoonePermissionsConfig.DatabaseSettings.Address, LoonePermissionsConfig.DatabaseSettings.Database, LoonePermissionsConfig.DatabaseSettings.Username, LoonePermissionsConfig.DatabaseSettings.Password, LoonePermissionsConfig.DatabaseSettings.Port));
 
             MySqlCommand cmd1 = connection.CreateCommand();
@@ -90,6 +91,52 @@ namespace LoonePermissions.Managers
 
                 Logger.Log(string.Format("Generating table: {0}", PLAYER_TABLE), ConsoleColor.Yellow);
             }
+        }
+
+        /// <summary>
+        /// Gets the parent group
+        /// </summary>
+        /// <param name="groupId"> The group to get parent of </param>
+        /// <returns> The parent group </returns>
+        public static RocketPermissionsGroup GetParentGroup(string groupId)
+        {
+            MySqlCommand cmd1 = Connection.CreateCommand();
+            MySqlCommand cmd2 = Connection.CreateCommand();
+
+            cmd1.CommandText = string.Format($"SELECT `parent` FROM `{GROUP_TABLE}` WHERE `groupid`='{groupId}'");
+
+            TryOpen();
+            object obj = cmd1.ExecuteScalar();
+            TryClose();
+            string parentId = (obj == null) ? "" : obj.ToString();
+
+            TryOpen();
+            cmd2.CommandText = string.Format("SELECT * FROM `{0}` WHERE `groupid`='{1}'", GROUP_TABLE, parentId);
+            MySqlDataReader dr = cmd2.ExecuteReader();
+
+            RocketPermissionsGroup group;
+
+            if (dr.Read())
+            {
+                group = new RocketPermissionsGroup()
+                {
+                    Id = groupId,
+                    DisplayName = (dr.IsDBNull(1)) ? "" : dr.GetString(1),
+                    ParentGroup = (dr.IsDBNull(2)) ? "" : dr.GetString(2),
+                    Prefix = (dr.IsDBNull(3)) ? "" : dr.GetString(3),
+                    Suffix = (dr.IsDBNull(4)) ? "" : dr.GetString(4),
+                    Color = (dr.IsDBNull(5)) ? "" : dr.GetString(5),
+                    Priority = (dr.IsDBNull(6)) ? (short)100 : dr.GetInt16(6)
+                };
+                TryClose();
+            }
+            else
+            {
+                TryClose();
+                return GetGroup(LoonePermissionsConfig.DefaultGroup.ToLower());
+            }
+
+            return group;
         }
 
         public static RocketPermissionsGroup GetGroup(string groupId)

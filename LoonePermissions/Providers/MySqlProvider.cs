@@ -33,7 +33,10 @@ namespace LoonePermissions.Providers
             List<RocketPermissionsGroup> groups = new List<RocketPermissionsGroup>();
 
             foreach (string str in groupId)
+            {
                 groups.Add(MySqlManager.GetGroup(str));
+                groups.Add(MySqlManager.GetParentGroup(str));
+            }
 
             return (from x in groups.Distinct()
                     orderby x.Priority
@@ -48,7 +51,7 @@ namespace LoonePermissions.Providers
             List<Permission> perms = new List<Permission>();
 
             foreach (RocketPermissionsGroup str in groupId)
-                perms.AddRange(MySqlManager.GetPermissionsByGroup(str.Id, true));
+                perms.AddRange(MySqlManager.GetPermissionsByGroup(str.Id, false));
 
             return perms;
         }
